@@ -182,9 +182,9 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       const data = (await resp.json()) as { suggestions?: string[] };
       if (Array.isArray(data.suggestions) && data.suggestions.length >= 3) {
         if (pathname === "/register/doctors") {
-          setSmartOptions(mergeDoctorTopSuggestions(data.suggestions));
+          setSmartOptions(mergeDoctorTopSuggestions(data.suggestions).slice(0, 3));
         } else {
-          setSmartOptions(data.suggestions.slice(0, 5));
+          setSmartOptions(data.suggestions.slice(0, 3));
         }
       }
     } catch {
@@ -204,24 +204,26 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   const analyzeIntent = async (text: string) => {
     const query = text.trim();
     if (!query) return;
+    
+    setInput(query); // Ensure input shows what was spoken/clicked
 
     if (pathname === "/register/doctors" && wantsAuthoritativeDoctors(query)) {
+      setQaAnswer("好的，为您筛选更权威的专家医生。");
       applyDoctorAdjustment("expert-first");
-      setInput("");
       setVoiceHint("");
       return;
     }
 
     if (pathname === "/register/doctors" && wantsFasterDoctors(query)) {
+      setQaAnswer("没问题，为您切换到最早有号源的医生。");
       applyDoctorAdjustment("time-first");
-      setInput("");
       setVoiceHint("");
       return;
     }
 
     if (pathname === "/register/doctors" && wantsAnotherDoctor(query)) {
+      setQaAnswer("好的，为您重新推荐一位医生。");
       applyDoctorAdjustment(resolveCurrentDoctorPreference());
-      setInput("");
       setVoiceHint("");
       return;
     }
@@ -252,9 +254,9 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       };
       if (Array.isArray(data.suggestions) && data.suggestions.length) {
         if (pathname === "/register/doctors") {
-          setSmartOptions(mergeDoctorTopSuggestions(data.suggestions));
+          setSmartOptions(mergeDoctorTopSuggestions(data.suggestions).slice(0, 3));
         } else {
-          setSmartOptions(data.suggestions.slice(0, 5));
+          setSmartOptions(data.suggestions.slice(0, 3));
         }
       }
       lastQuestionRef.current = query;
@@ -266,6 +268,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
             : wantsFasterDoctors(query)
               ? "time-first"
               : resolveCurrentDoctorPreference();
+          setQaAnswer(`已为您调整条件并推荐相关医生。`);
           applyDoctorAdjustment(pref, {
             symptom,
             department: data.department,
@@ -273,7 +276,6 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
             doctorHint: data.doctorHint,
             queueHint: data.queueHint,
           });
-          setInput("");
           setVoiceHint("");
           return;
         }
@@ -302,8 +304,8 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         if (data.reason) queryParts.push(`reason=${encodeURIComponent(data.reason)}`);
         if (data.doctorHint) queryParts.push(`doctorHint=${encodeURIComponent(data.doctorHint)}`);
         if (data.queueHint) queryParts.push(`queueHint=${encodeURIComponent(data.queueHint)}`);
+        setQaAnswer(`已根据您的需求为您推荐相关科室与医生。`);
         router.push(`/register/doctors?${queryParts.join("&")}`);
-        setInput("");
         setVoiceHint("");
         return;
       }
@@ -370,6 +372,13 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         {/* Top 1/5: AI Chat */}
         <div className="flex h-[20%] flex-col overflow-y-auto border-b border-gray-200 p-4 bg-white/50">
           <div className="flex-1 overflow-y-auto flex flex-col justify-end gap-3 pb-2">
+            {input && (
+              <div className="flex flex-row-reverse items-start gap-3 mt-2">
+                <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-hospital-blue p-4 text-white shadow-sm">
+                  <p className="text-base whitespace-pre-wrap leading-relaxed">{input}</p>
+                </div>
+              </div>
+            )}
             {isAnalyzing ? (
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hospital-blue text-white shadow-sm">
@@ -392,13 +401,6 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
                 </div>
               )
             )}
-            {input && !isAnalyzing && (
-              <div className="flex flex-row-reverse items-start gap-3 mt-2">
-                <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-hospital-blue p-4 text-white shadow-sm">
-                  <p className="text-base whitespace-pre-wrap leading-relaxed">{input}</p>
-                </div>
-              </div>
-            )}
             {voiceHint && (
               <div className="mt-1 text-center text-sm text-orange-500">
                 {voiceHint}
@@ -413,37 +415,35 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         </div>
 
         {/* Bottom 1/5: Interaction Area */}
-        <div className="flex h-[20%] flex-col border-t border-gray-200 bg-white p-4 justify-center">
-          <div className="flex items-center gap-4 h-full">
-            {/* Mic button on far left */}
-            <button
-              type="button"
-              onClick={isListening ? stopVoiceInput : startVoiceInput}
-              className={`flex shrink-0 h-16 w-16 items-center justify-center rounded-full shadow-lg transition-all ${
-                isListening ? "bg-red-500 text-white animate-pulse" : "bg-hospital-blue text-white hover:scale-105"
-              }`}
-              aria-label={isListening ? "停止语音输入" : "开始语音输入"}
-            >
-              <Mic size={32} />
-            </button>
-
-            {/* Smart options wrap container next to it */}
-            <div className="flex flex-1 flex-wrap content-center gap-2">
-              {smartOptions.map((keyword, index) => (
-                <button
-                  key={`${keyword}-${index}`}
-                  type="button"
-                  onClick={() => {
-                    setInput(keyword);
-                    void analyzeIntent(keyword);
-                  }}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100"
-                >
-                  {keyword}
-                </button>
-              ))}
-            </div>
+        <div className="flex h-[20%] flex-col border-t border-gray-200 bg-white p-4 justify-center items-center gap-4">
+          {/* Smart options wrap container on top */}
+          <div className="flex w-full flex-wrap justify-center content-center gap-2">
+            {smartOptions.slice(0, 3).map((keyword, index) => (
+              <button
+                key={`${keyword}-${index}`}
+                type="button"
+                onClick={() => {
+                  setInput(keyword);
+                  void analyzeIntent(keyword);
+                }}
+                className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100"
+              >
+                {keyword}
+              </button>
+            ))}
           </div>
+
+          {/* Mic button centered below */}
+          <button
+            type="button"
+            onClick={isListening ? stopVoiceInput : startVoiceInput}
+            className={`flex shrink-0 h-16 w-16 items-center justify-center rounded-full shadow-lg transition-all ${
+              isListening ? "bg-red-500 text-white animate-pulse" : "bg-hospital-blue text-white hover:scale-105"
+            }`}
+            aria-label={isListening ? "停止语音输入" : "开始语音输入"}
+          >
+            <Mic size={32} />
+          </button>
         </div>
       </div>
     </div>
