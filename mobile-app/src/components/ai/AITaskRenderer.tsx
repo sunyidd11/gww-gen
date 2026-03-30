@@ -462,7 +462,6 @@ export default function AITaskRenderer({
             </div>
 
             <div className="rounded-3xl border border-blue-100 bg-blue-50 p-6 text-center sm:p-8">
-              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-blue-600 sm:text-sm">推荐科室</div>
               <div className="mb-3 text-3xl font-black text-hospital-blue sm:mb-4 sm:text-5xl">{(activeTask.data as MedicalData).recommendation}</div>
               <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-600 sm:text-base">
                 <CheckCircle2 size={18} />

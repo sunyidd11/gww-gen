@@ -154,16 +154,10 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
           <div className="mt-2 sm:mt-5">
               <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <p className="text-[22px] font-bold text-gray-900">
-                  推荐科室：
                   {journey.recommendation.department}
                 </p>
                 {showExpertList || showFastList ? (
                   <>
-                    <p className="text-sm text-gray-600">
-                      {showExpertList
-                        ? "已为你筛选本科室 3 位更权威医生，请选择并确认挂号"
-                        : "已为你筛选本科室 3 位最早号源医生，请选择并确认挂号"}
-                    </p>
                     <AuthoritativeDoctorPicker
                       doctors={showExpertList ? topExpertDoctors : topFastDoctors}
                       lang="zh"
@@ -172,15 +166,6 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
                   </>
                 ) : (
                   <>
-                    {singleAdjustMode ? (
-                      <p className="text-sm text-gray-600">
-                        已按你的偏好重新推荐医生（第 {adjustCount} 轮）
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-600">
-                        系统已根据优先级为你推荐 1 位医生
-                      </p>
-                    )}
                     <p className="mt-1 text-[25px] font-bold">
                       {recommendedDoctor.name} {recommendedDoctor.title}
                     </p>
@@ -257,7 +242,6 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
                 <>
                   <div className="rounded-xl border border-red-100 bg-red-50 p-4">
                     <p className="text-[22px] font-bold text-gray-900">
-                      推荐科室：
                       {journey.recommendation.department}
                     </p>
                     <p className="text-sm text-red-600">

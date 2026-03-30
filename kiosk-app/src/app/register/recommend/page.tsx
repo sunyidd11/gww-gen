@@ -87,8 +87,7 @@ export default async function RecommendRegisterPage(props: RecommendRegisterPage
   return (
     <div className="flex h-full w-full flex-col p-4 md:p-6">
       <div className="w-full rounded-2xl border border-gray-100 bg-white shadow-sm p-6 text-gray-900">
-        <p className="text-sm text-gray-500">推荐预约挂号页面</p>
-        <h1 className="mt-2 text-[28px] font-black sm:text-[36px]">系统已识别您的需求</h1>
+        <h1 className="mt-2 text-[28px] font-black sm:text-[36px]">已识别您的需求</h1>
         <p className="mt-3 text-[18px] text-gray-800 sm:text-[20px]">输入症状：{symptomDisplay}</p>
         <p className="mt-1 text-[16px] text-gray-600 sm:text-[18px]">
           就诊人：{journey.patient.maskedName}（{journey.patient.gender}，{journey.patient.age}岁） | 就诊号：

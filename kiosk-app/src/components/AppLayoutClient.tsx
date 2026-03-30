@@ -55,6 +55,25 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   const latestInputRef = useRef("");
   const lastQuestionRef = useRef("");
 
+  const truncateOptionsTo20Chars = (options: string[]) => {
+    let totalLength = 0;
+    const result: string[] = [];
+    for (const opt of options) {
+      if (result.length >= 3) break;
+      const remaining = 20 - totalLength;
+      if (remaining <= 0) break;
+      let text = opt;
+      if (text.length > remaining) {
+        text = text.substring(0, remaining);
+      }
+      result.push(text);
+      totalLength += text.length;
+    }
+    return result;
+  };
+
+  const displayOptions = truncateOptionsTo20Chars(smartOptions);
+
   const mergeDoctorTopSuggestions = (suggestions: string[]): string[] => {
     const fixedTop = ["想要更权威的医生", "想要更快就诊"];
     const normalized = suggestions
@@ -439,9 +458,9 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
 
         {/* Bottom 1/5: Interaction Area */}
         <div className="flex h-[20%] flex-col border-t border-gray-200 bg-white p-4 justify-center items-center gap-3">
-          {/* Smart options wrap container on top (single line forced) */}
-          <div className="flex w-full justify-center gap-2 overflow-hidden">
-            {smartOptions.slice(0, 3).map((keyword, index) => (
+          {/* Smart options wrap container on top (single line forced, fill entire row) */}
+          <div className="flex w-full gap-2">
+            {displayOptions.map((keyword, index) => (
               <button
                 key={`${keyword}-${index}`}
                 type="button"
@@ -449,10 +468,9 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
                   setInput(keyword);
                   void analyzeIntent(keyword);
                 }}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100 whitespace-nowrap truncate max-w-[120px]"
-                title={keyword}
+                className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-2 text-xs text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100 whitespace-nowrap text-center"
               >
-                {keyword.length > 8 ? keyword.substring(0, 8) + '...' : keyword}
+                {keyword}
               </button>
             ))}
           </div>
