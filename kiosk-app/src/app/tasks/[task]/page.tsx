@@ -114,10 +114,6 @@ export default async function TaskDetailPage(props: TaskPageProps) {
           initialStepIndex={initialStepIndex}
           flowStage={flowStage}
         />
-
-        <div className="mt-6">
-          <TaskNavigator currentSlug={cfg.slug} relatedSlugs={aiRelated ?? cfg.related} lang="zh" />
-        </div>
       </div>
     </div>
   );

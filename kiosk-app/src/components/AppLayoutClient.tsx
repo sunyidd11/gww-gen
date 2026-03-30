@@ -438,9 +438,9 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         </div>
 
         {/* Bottom 1/5: Interaction Area */}
-        <div className="flex h-[20%] flex-col border-t border-gray-200 bg-white p-4 justify-center items-center gap-4">
-          {/* Smart options wrap container on top */}
-          <div className="flex w-full flex-wrap justify-center content-center gap-2">
+        <div className="flex h-[20%] flex-col border-t border-gray-200 bg-white p-4 justify-center items-center gap-3">
+          {/* Smart options wrap container on top (single line forced) */}
+          <div className="flex w-full justify-center gap-2 overflow-hidden">
             {smartOptions.slice(0, 3).map((keyword, index) => (
               <button
                 key={`${keyword}-${index}`}
@@ -449,9 +449,10 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
                   setInput(keyword);
                   void analyzeIntent(keyword);
                 }}
-                className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100"
+                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 transition-colors active:bg-gray-200 hover:bg-gray-100 whitespace-nowrap truncate max-w-[120px]"
+                title={keyword}
               >
-                {keyword}
+                {keyword.length > 8 ? keyword.substring(0, 8) + '...' : keyword}
               </button>
             ))}
           </div>
