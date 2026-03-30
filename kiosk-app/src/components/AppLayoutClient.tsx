@@ -151,6 +151,8 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     current.searchParams.set("adjustPref", pref);
     current.searchParams.set("adjustCount", String(nextCount));
     current.searchParams.delete("selectedDoctor");
+    current.searchParams.delete("followup"); // Clear followup mode if they change requirements
+
     if (options?.symptom) current.searchParams.set("symptom", options.symptom);
     if (options?.department) current.searchParams.set("department", options.department);
     if (options?.reason) current.searchParams.set("reason", options.reason);
@@ -221,6 +223,13 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
 
   useEffect(() => {
     void refreshSuggestionsByContext();
+
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      if (pathname === "/register/doctors" && sp.get("followup") === "1") {
+        setQaAnswer("你好！已为您读取就诊记录。请问需要直接预约原医生复诊，还是告诉我您近期的症状？");
+      }
+    }
   }, [pathname]);
 
   const getSpeechRecognitionCtor = () => {
@@ -250,21 +259,21 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     }
 
     if (pathname === "/register/doctors" && wantsAuthoritativeDoctors(query)) {
-      setQaAnswer("好的，为您筛选更权威的专家医生。");
+      setQaAnswer("好的，为您筛选更权威的专家医生，按照专家级别和好评度为您排序。");
       applyDoctorAdjustment("expert-first");
       setVoiceHint("");
       return;
     }
 
     if (pathname === "/register/doctors" && wantsFasterDoctors(query)) {
-      setQaAnswer("没问题，为您切换到最早有号源的医生。");
+      setQaAnswer("没问题，为您切换到最早有号源的医生，按照可就诊时间为您排序。");
       applyDoctorAdjustment("time-first");
       setVoiceHint("");
       return;
     }
 
     if (pathname === "/register/doctors" && wantsAnotherDoctor(query)) {
-      setQaAnswer("好的，为您重新推荐一位医生。");
+      setQaAnswer("好的，已为您重新推荐了一位医生供您选择。");
       applyDoctorAdjustment(resolveCurrentDoctorPreference());
       setVoiceHint("");
       return;
@@ -310,7 +319,8 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
             : wantsFasterDoctors(query)
               ? "time-first"
               : resolveCurrentDoctorPreference();
-          setQaAnswer(`已为您调整条件并推荐相关医生。`);
+          
+          setQaAnswer(`根据您补充的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`);
           applyDoctorAdjustment(pref, {
             symptom,
             department: data.department,
@@ -346,7 +356,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         if (data.reason) queryParts.push(`reason=${encodeURIComponent(data.reason)}`);
         if (data.doctorHint) queryParts.push(`doctorHint=${encodeURIComponent(data.doctorHint)}`);
         if (data.queueHint) queryParts.push(`queueHint=${encodeURIComponent(data.queueHint)}`);
-        setQaAnswer(`已根据您的需求为您推荐相关科室与医生。`);
+        setQaAnswer(`根据您的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`);
         router.push(`/register/doctors?${queryParts.join("&")}`);
         setVoiceHint("");
         return;

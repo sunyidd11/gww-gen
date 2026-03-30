@@ -181,15 +181,27 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
             patientGender: mobileProfile?.patientGender ?? base.patientGender,
           };
           writeJourneyProgress(nextState);
-          router.push(buildStageHref(1, nextState));
+          
+          // Direct to follow-up doctor recommendation
+          const q = new URLSearchParams({
+            symptom: nextState.symptom,
+            flowStage: "1",
+            patientName: nextState.patientName,
+            patientAge: String(nextState.patientAge),
+            patientGender: nextState.patientGender,
+            followup: "1",
+            originalDoctor: "王主任",
+            department: "呼吸内科",
+          });
+          router.push(`/register/doctors?${q.toString()}`);
         }}
-        className="block rounded-2xl border border-white/20 bg-black/40 p-6 text-left hover:bg-black/30"
+        className="block rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
       >
-        <div className="mb-3 inline-flex rounded-xl bg-white/10 p-3">
+        <div className="mb-3 inline-flex rounded-xl bg-gray-100 p-3 text-hospital-blue">
           <CreditCard size={34} />
         </div>
-        <p className="text-[24px] font-bold">{tt("插入医保卡", "Insert Card")}</p>
-        <p className="mt-2 text-[18px] text-white/70">{tt("将卡片平稳插入读卡区", "Insert card into reader")}</p>
+        <p className="text-[24px] font-bold text-gray-900">插入医保卡</p>
+        <p className="mt-2 text-[18px] text-gray-500">将卡片平稳插入读卡区</p>
       </button>
 
       <button
@@ -199,13 +211,13 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           const nextStage = current.nextStage;
           router.push(buildStageHref(nextStage, current));
         }}
-        className="block rounded-2xl border border-white/20 bg-black/40 p-6 text-left hover:bg-black/30"
+        className="block rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
       >
-        <div className="mb-3 inline-flex rounded-xl bg-white/10 p-3">
+        <div className="mb-3 inline-flex rounded-xl bg-gray-100 p-3 text-hospital-blue">
           <QrCode size={34} />
         </div>
-        <p className="text-[24px] font-bold">{tt("扫描医保码", "Scan Insurance QR")}</p>
-        <p className="mt-2 text-[18px] text-white/70">{tt("将二维码对准扫码区域", "Align QR with scanner")}</p>
+        <p className="text-[24px] font-bold text-gray-900">扫描医保码</p>
+        <p className="mt-2 text-[18px] text-gray-500">将二维码对准扫码区域</p>
       </button>
     </div>
   );
