@@ -94,6 +94,14 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     return keywords.some((k) => q.includes(k));
   };
 
+  const isPositiveConfirmation = (text: string): boolean => {
+    const q = text.trim().toLowerCase();
+    const keywords = [
+      "可以", "同意", "好的", "没问题", "直接帮我", "就这个", "行", "直接挂号", "直接缴费", "确认", "确定", "帮我挂"
+    ];
+    return keywords.some((k) => q.includes(k));
+  };
+
   const resolveCurrentDoctorPreference = (): "expert-first" | "time-first" => {
     if (typeof window === "undefined") return "time-first";
     const current = new URL(window.location.href);
@@ -206,6 +214,21 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     if (!query) return;
     
     setInput(query); // Ensure input shows what was spoken/clicked
+
+    if (isPositiveConfirmation(query)) {
+      setQaAnswer("好的，正在为您自动确认并进入下一步...");
+      setTimeout(() => {
+        // Try to find the primary blue action button or link
+        const primaryBtn = document.querySelector('a.bg-blue-600, button.bg-blue-600, .bg-blue-600') as HTMLElement;
+        if (primaryBtn) {
+          primaryBtn.click();
+        } else {
+          setQaAnswer("当前页面没有可确认的操作，请直接描述您的需求。");
+        }
+      }, 800);
+      setVoiceHint("");
+      return;
+    }
 
     if (pathname === "/register/doctors" && wantsAuthoritativeDoctors(query)) {
       setQaAnswer("好的，为您筛选更权威的专家医生。");
@@ -374,28 +397,28 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
           <div className="flex-1 overflow-y-auto flex flex-col justify-end gap-3 pb-2">
             {input && (
               <div className="flex flex-row-reverse items-start gap-3 mt-2">
-                <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-hospital-blue p-4 text-white shadow-sm">
+                <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-gray-100 p-4 text-gray-800 shadow-sm border border-gray-200">
                   <p className="text-base whitespace-pre-wrap leading-relaxed">{input}</p>
                 </div>
               </div>
             )}
             {isAnalyzing ? (
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 mt-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hospital-blue text-white shadow-sm">
                   <Bot size={24} />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-none border border-gray-100 bg-white p-4 shadow-sm text-gray-500">
-                  <Loader2 className="animate-spin" size={20} />
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-none border border-transparent bg-hospital-blue p-4 shadow-sm text-white">
+                  <Loader2 className="animate-spin text-white" size={20} />
                   <span className="text-sm">AI 正在识别你的需求...</span>
                 </div>
               </div>
             ) : (
               qaAnswer && (
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 mt-2">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hospital-blue text-white shadow-sm">
                     <Bot size={24} />
                   </div>
-                  <div className="rounded-2xl rounded-tl-none border border-gray-100 bg-white p-4 text-gray-800 shadow-sm">
+                  <div className="rounded-2xl rounded-tl-none border border-transparent bg-hospital-blue p-4 text-white shadow-sm max-w-[85%]">
                     <p className="text-base whitespace-pre-wrap leading-relaxed">{qaAnswer}</p>
                   </div>
                 </div>
