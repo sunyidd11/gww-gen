@@ -171,6 +171,10 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       current.searchParams.delete("expertList");
       current.searchParams.delete("fastList");
     }
+    
+    if (current.pathname.includes("/register/recommend")) {
+      current.pathname = "/register/doctors";
+    }
     router.push(`${current.pathname}?${current.searchParams.toString()}`);
   };
 
@@ -226,7 +230,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
 
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
-      if (pathname === "/register/doctors" && sp.get("followup") === "1") {
+      if (pathname === "/register/recommend" && sp.get("followup") === "1") {
         setQaAnswer("你好！已为您读取就诊记录。请问需要直接预约原医生复诊，还是告诉我您近期的症状？");
       }
     }
@@ -258,21 +262,21 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       return;
     }
 
-    if (pathname === "/register/doctors" && wantsAuthoritativeDoctors(query)) {
+    if ((pathname === "/register/doctors" || pathname === "/register/recommend") && wantsAuthoritativeDoctors(query)) {
       setQaAnswer("好的，为您筛选更权威的专家医生，按照专家级别和好评度为您排序。");
       applyDoctorAdjustment("expert-first");
       setVoiceHint("");
       return;
     }
 
-    if (pathname === "/register/doctors" && wantsFasterDoctors(query)) {
+    if ((pathname === "/register/doctors" || pathname === "/register/recommend") && wantsFasterDoctors(query)) {
       setQaAnswer("没问题，为您切换到最早有号源的医生，按照可就诊时间为您排序。");
       applyDoctorAdjustment("time-first");
       setVoiceHint("");
       return;
     }
 
-    if (pathname === "/register/doctors" && wantsAnotherDoctor(query)) {
+    if ((pathname === "/register/doctors" || pathname === "/register/recommend") && wantsAnotherDoctor(query)) {
       setQaAnswer("好的，已为您重新推荐了一位医生供您选择。");
       applyDoctorAdjustment(resolveCurrentDoctorPreference());
       setVoiceHint("");
@@ -313,7 +317,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       lastQuestionRef.current = query;
       if (data.intent === "symptom") {
         const symptom = (data.symptom || query).trim();
-        if (pathname === "/register/doctors") {
+        if (pathname === "/register/doctors" || pathname === "/register/recommend") {
           const pref = wantsAuthoritativeDoctors(query)
             ? "expert-first"
             : wantsFasterDoctors(query)

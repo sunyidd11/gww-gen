@@ -182,7 +182,6 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           };
           writeJourneyProgress(nextState);
           
-          // Direct to follow-up doctor recommendation
           const q = new URLSearchParams({
             symptom: nextState.symptom,
             flowStage: "1",
@@ -193,7 +192,7 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
             originalDoctor: "王主任",
             department: "呼吸内科",
           });
-          router.push(`/register/doctors?${q.toString()}`);
+          router.push(`/register/recommend?${q.toString()}`);
         }}
         className="block rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
       >

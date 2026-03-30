@@ -7,6 +7,7 @@ import {
 import { getQwenClinicalPlan } from "../../../lib/qwen-clinical-plan";
 import { getQwenTriageRecommendation } from "../../../lib/qwen-triage";
 import PriorityRecommendationPanel from "../../../components/PriorityRecommendationPanel";
+import Link from "next/link";
 
 type RecommendRegisterPageProps = {
   searchParams: Promise<{
@@ -20,6 +21,8 @@ type RecommendRegisterPageProps = {
     patientName?: string;
     patientAge?: string;
     patientGender?: string;
+    followup?: string;
+    originalDoctor?: string;
   }>;
 };
 
@@ -32,6 +35,8 @@ export default async function RecommendRegisterPage(props: RecommendRegisterPage
   const patientGender = sp.patientGender === "女" ? "女" : "男";
   const flowStageRaw = Number(sp.flowStage ?? "1");
   const flowStage = Number.isFinite(flowStageRaw) ? flowStageRaw : 1;
+  const isFollowupMode = sp.followup === "1";
+  
   const evidence: FlowEvidence = {
     hasPendingCheckIn: true,
     unpaidOrderCount: 1,
@@ -88,24 +93,42 @@ export default async function RecommendRegisterPage(props: RecommendRegisterPage
     <div className="flex h-full w-full flex-col p-4 md:p-6">
       <div className="w-full rounded-2xl border border-gray-100 bg-white shadow-sm p-6 text-gray-900">
         <h1 className="mt-2 text-[28px] font-black sm:text-[36px]">已识别您的需求</h1>
-        <p className="mt-3 text-[18px] text-gray-800 sm:text-[20px]">输入症状：{symptomDisplay}</p>
+        {isFollowupMode ? (
+          <p className="mt-3 text-[18px] text-gray-800 sm:text-[20px]">复诊医生：{sp.originalDoctor || "王主任"}</p>
+        ) : (
+          <p className="mt-3 text-[18px] text-gray-800 sm:text-[20px]">输入症状：{symptomDisplay}</p>
+        )}
         <p className="mt-1 text-[16px] text-gray-600 sm:text-[18px]">
           就诊人：{journey.patient.maskedName}（{journey.patient.gender}，{journey.patient.age}岁） | 就诊号：
           {journey.patient.visitNo}
         </p>
 
         <div className="mt-5">
-          <PriorityRecommendationPanel
-            symptom={symptomDisplay}
-            department={journey.recommendation.department}
-            reason={journey.recommendation.reason}
-            doctorName={directDoctor.name}
-            doctorTitle={directDoctor.title}
-            doctorSpecialty={directDoctor.specialty}
-            doctorNextSlot={directDoctor.nextSlot}
-            doctorsPageHref={doctorsPageHref}
-            lang="zh"
-          />
+          {isFollowupMode ? (
+            <PriorityRecommendationPanel
+              symptom="复诊无需重新识别"
+              department="呼吸内科"
+              reason="为您推荐原医生复诊（免挂号费）"
+              doctorName={sp.originalDoctor || "王主任"}
+              doctorTitle="主任医师"
+              doctorSpecialty="呼吸内科常见病、多发病的诊治。"
+              doctorNextSlot="现在有号"
+              doctorsPageHref={doctorsPageHref}
+              lang="zh"
+            />
+          ) : (
+            <PriorityRecommendationPanel
+              symptom={symptomDisplay}
+              department={journey.recommendation.department}
+              reason={journey.recommendation.reason}
+              doctorName={directDoctor.name}
+              doctorTitle={directDoctor.title}
+              doctorSpecialty={directDoctor.specialty}
+              doctorNextSlot={directDoctor.nextSlot}
+              doctorsPageHref={doctorsPageHref}
+              lang="zh"
+            />
+          )}
         </div>
       </div>
     </div>
