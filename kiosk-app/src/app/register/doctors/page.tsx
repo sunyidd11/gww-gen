@@ -92,7 +92,8 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
     },
     lang: "zh",
   });
-  const doctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, activePriority);
+  const doctorHintVal = forcedRecommendation?.doctorHint ?? sp.doctorHint;
+  const doctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, activePriority, doctorHintVal);
   const selectedDoctorByQuery = doctors.find((d) => d.name === (sp.selectedDoctor ?? ""));
   const adjustedIndex = singleAdjustMode ? Math.min(adjustCount, Math.max(0, doctors.length - 1)) : 0;
   const recommendedDoctor =
@@ -133,8 +134,8 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
     `&patientGender=${encodeURIComponent(journey.patient.gender)}` +
     `&paymentMode=registration-only` +
     `&hasPendingCheckIn=1&unpaidOrderCount=1&reportReadyCount=1&queueStatus=未排队&needsHumanAssist=0`;
-  const topExpertDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "expert-first").slice(0, 3);
-  const topFastDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "time-first").slice(0, 3);
+  const topExpertDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "expert-first", doctorHintVal).slice(0, 3);
+  const topFastDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "time-first", doctorHintVal).slice(0, 3);
   const detailBaseHref =
     `/register/doctors?symptom=${encodeURIComponent(symptom)}` +
     `&flowStage=${encodeURIComponent(String(flowStage))}` +

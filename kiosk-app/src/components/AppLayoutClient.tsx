@@ -324,7 +324,11 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
               ? "time-first"
               : resolveCurrentDoctorPreference();
           
-          setQaAnswer(`根据您补充的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`);
+          const replyText = (!data.symptom || (symptom === query && (query.includes("挂号") || query.includes("看病"))))
+            ? `根据您的需求“${symptom}”，为您匹配了以下三位医生，已综合考虑专业匹配度与号源时间为您排序。`
+            : `根据您补充的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`;
+          
+          setQaAnswer(replyText);
           applyDoctorAdjustment(pref, {
             symptom,
             department: data.department,
@@ -360,7 +364,10 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
         if (data.reason) queryParts.push(`reason=${encodeURIComponent(data.reason)}`);
         if (data.doctorHint) queryParts.push(`doctorHint=${encodeURIComponent(data.doctorHint)}`);
         if (data.queueHint) queryParts.push(`queueHint=${encodeURIComponent(data.queueHint)}`);
-        setQaAnswer(`根据您的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`);
+        const replyText = (!data.symptom || (symptom === query && (query.includes("挂号") || query.includes("看病"))))
+          ? `根据您的需求“${symptom}”，为您匹配了以下三位医生，已综合考虑专业匹配度与号源时间为您排序。`
+          : `根据您的症状“${symptom}”，为您推荐了以下三位相关专业的医生，综合考虑了医生的专业匹配度与号源时间。`;
+        setQaAnswer(replyText);
         router.push(`/register/doctors?${queryParts.join("&")}`);
         setVoiceHint("");
         return;
@@ -435,27 +442,15 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
                 </div>
               </div>
             )}
-            {isAnalyzing ? (
+            {!isAnalyzing && qaAnswer && (
               <div className="flex items-start gap-3 mt-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hospital-blue text-white shadow-sm">
                   <Bot size={24} />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-none border border-transparent bg-hospital-blue p-4 shadow-sm text-white">
-                  <Loader2 className="animate-spin text-white" size={20} />
-                  <span className="text-sm">AI 正在识别你的需求...</span>
+                <div className="rounded-2xl rounded-tl-none border border-transparent bg-hospital-blue p-4 text-white shadow-sm max-w-[85%]">
+                  <p className="text-base whitespace-pre-wrap leading-relaxed">{qaAnswer}</p>
                 </div>
               </div>
-            ) : (
-              qaAnswer && (
-                <div className="flex items-start gap-3 mt-2">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hospital-blue text-white shadow-sm">
-                    <Bot size={24} />
-                  </div>
-                  <div className="rounded-2xl rounded-tl-none border border-transparent bg-hospital-blue p-4 text-white shadow-sm max-w-[85%]">
-                    <p className="text-base whitespace-pre-wrap leading-relaxed">{qaAnswer}</p>
-                  </div>
-                </div>
-              )
             )}
             {voiceHint && (
               <div className="mt-1 text-center text-sm text-orange-500">
@@ -467,6 +462,13 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
 
         {/* Middle 3/5: Core Task Window */}
         <div className="flex h-[60%] flex-col overflow-y-auto bg-hospital-bg text-gray-900 relative">
+          {isAnalyzing && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+              <Loader2 className="h-12 w-12 animate-spin text-hospital-blue mb-4" />
+              <p className="text-xl font-bold text-gray-800">正在根据您的需求生成页面...</p>
+              <p className="mt-2 text-sm text-gray-500">正在匹配最合适的医生和号源</p>
+            </div>
+          )}
           {children}
         </div>
 

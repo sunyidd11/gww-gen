@@ -573,13 +573,25 @@ export function isAbnormalItem(name: string, symptomInput: string, idx: number):
  */
 export function sortDoctorCandidatesByPriority(
   candidates: DoctorCandidate[],
-  priority: PriorityMode
+  priority: PriorityMode,
+  doctorHint?: string
 ): DoctorCandidate[] {
   const copied = [...candidates];
   if (priority === "time-first") {
-    return copied.sort((a, b) => a.waitMinutes - b.waitMinutes);
+    copied.sort((a, b) => a.waitMinutes - b.waitMinutes);
+  } else {
+    copied.sort((a, b) => b.authorityScore - a.authorityScore);
   }
-  return copied.sort((a, b) => b.authorityScore - a.authorityScore);
+  
+  if (doctorHint) {
+    const hintIdx = copied.findIndex((d) => doctorHint.includes(d.name));
+    if (hintIdx > 0) {
+      const target = copied.splice(hintIdx, 1)[0];
+      copied.unshift(target);
+    }
+  }
+  
+  return copied;
 }
 
 /**

@@ -70,7 +70,8 @@ export default async function RecommendRegisterPage(props: RecommendRegisterPage
     },
     lang: "zh",
   });
-  const directDoctor = sortDoctorCandidatesByPriority(journey.doctorCandidates, "time-first")[0];
+  const doctorHintVal = recommendation.doctorHint;
+  const directDoctor = sortDoctorCandidatesByPriority(journey.doctorCandidates, "time-first", doctorHintVal)[0];
   const nextTask = getNextTaskByEvidence(evidence);
   const nextHref = nextTask
     ? `/tasks/${nextTask}?symptom=${encodeURIComponent(symptom)}&${evidenceToQuery(evidence)}`
