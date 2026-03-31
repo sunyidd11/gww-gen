@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 
 import {
   buildAiContextSummary,
-  buildResumeTaskComponent,
   buildTaskCompletionSummary,
   buildTaskStepTask,
   buildUserProfileSummary,
@@ -20,6 +19,7 @@ import {
   recordTaskOpen,
   recordTaskSelection,
   recordTaskStepChange,
+  mapKioskStageOneCompletion,
 } from '../aiTaskFlow.ts';
 
 interface MockResponseData {
@@ -73,6 +73,24 @@ test('AI recommendation-only flow should not auto-open task card', () => {
 
   assert.equal(result.message?.component?.type, 'appointment');
   assert.equal(result.activeTask, null);
+});
+
+test('kiosk stage-1 completion should reuse medical component', () => {
+  const mapped = mapKioskStageOneCompletion({
+    department: '呼吸内科',
+    selectedDoctor: '王主任',
+    room: '2号诊室',
+    appointmentTime: '今日 14:00',
+  });
+
+  assert.equal(mapped.completedTitle, '推荐医生挂号缴费');
+  assert.equal(mapped.inlineComponent?.type, 'medical');
+  assert.deepEqual(mapped.inlineComponent?.data, {
+    department: '呼吸内科',
+    doctorName: '王主任',
+    time: '今日 14:00',
+    statusText: '挂号成功',
+  });
 });
 
 test('task factory should create task only when user manually opens it', () => {
@@ -266,7 +284,7 @@ test('journey context should track open, step change, selection and completion a
   assert.match(summary, /completedTasks/);
 });
 
-test('exiting a task should build dedicated resume-task component payload', () => {
+test('exiting a task should only record close state without resume-task payload', () => {
   const openedTask = createTaskFromComponent({
     type: 'appointment',
     data: { department: '呼吸内科' },
@@ -280,12 +298,9 @@ test('exiting a task should build dedicated resume-task component payload', () =
   });
   context = recordTaskClose(context);
 
-  const resumeComponent = buildResumeTaskComponent(context);
-  assert.equal(resumeComponent?.type, 'resume_task');
-  assert.equal(resumeComponent?.data.title, '继续推荐医生挂号缴费');
-  assert.equal(resumeComponent?.data.target, '返回刚才流程');
-  assert.equal(resumeComponent?.data.task.type, 'appointment');
-  assert.equal((resumeComponent?.data.task.data as Record<string, unknown>).department, '呼吸内科');
+  assert.equal(context.activeTaskSnapshot, null);
+  assert.equal(context.componentUsage[0]?.action, 'close');
+  assert.equal(context.componentUsage[0]?.taskType, 'appointment');
 });
 
 test('completion flow should preserve recommendation payload in model message', () => {
@@ -365,7 +380,12 @@ test('normalizeTaskForFlow should map standard medical entry components to fixed
   const normalizedMedical = normalizeTaskForFlow({
     type: 'medical',
     title: '智能分诊',
-    data: { recommendation: '呼吸内科', confidence: 0.9 },
+    data: {
+      department: '呼吸内科',
+      doctorName: '王主任',
+      time: '今日 14:00',
+      statusText: '挂号成功',
+    },
   });
   const normalizedReport = normalizeTaskForFlow({
     type: 'report',
@@ -375,6 +395,12 @@ test('normalizeTaskForFlow should map standard medical entry components to fixed
 
   assert.equal(normalizedMedical.type, 'appointment');
   assert.equal(normalizedMedical.title, '推荐医生挂号缴费');
+  assert.deepEqual(normalizedMedical.data, {
+    department: '呼吸内科',
+    doctorName: '王主任',
+    time: '今日 14:00',
+    statusText: '挂号成功',
+  });
   assert.equal(normalizedReport.type, 'report');
   assert.equal(normalizedReport.title, '检查结果打印及建议复诊');
 });
@@ -393,12 +419,22 @@ test('buildTaskStepTask should build current step component task from standard f
   const task = buildTaskStepTask({
     type: 'appointment',
     title: '推荐医生挂号缴费',
-    data: { department: '呼吸内科', recommendation: '呼吸内科', confidence: 0.9 },
-  }, 1);
+    data: {
+      department: '呼吸内科',
+      recommendation: '呼吸内科',
+      confidence: 0.9,
+      doctorName: '王主任',
+      time: '今日 14:00',
+      statusText: '挂号成功',
+    },
+  }, 0);
 
-  assert.equal(task?.type, 'appointment');
-  assert.equal(task?.title, '展示医生信息并确认挂号');
+  assert.equal(task?.type, 'medical');
+  assert.equal(task?.title, 'AI 根据症状推荐科室与医生');
   assert.equal((task?.data as Record<string, unknown>).department, '呼吸内科');
+  assert.equal((task?.data as Record<string, unknown>).doctorName, '王主任');
+  assert.equal((task?.data as Record<string, unknown>).time, '今日 14:00');
+  assert.equal((task?.data as Record<string, unknown>).statusText, '挂号成功');
 });
 
 test('buildTaskStepTask should switch standard flow appointment to payment step task', () => {
@@ -412,4 +448,28 @@ test('buildTaskStepTask should switch standard flow appointment to payment step 
   assert.equal(task?.title, '挂号缴费');
   assert.equal((task?.data as Record<string, unknown>).__standardFlowStepIndex, 2);
   assert.equal((task?.data as Record<string, unknown>).__standardFlowTaskType, 'appointment');
+});
+
+test('buildTaskStepTask should preserve medical appointment confirmation data for kiosk handoff', () => {
+  const task = buildTaskStepTask({
+    type: 'appointment',
+    title: '推荐医生挂号缴费',
+    data: {
+      department: '呼吸内科',
+      doctorName: '王主任',
+      time: '今日 14:00',
+      statusText: '挂号成功',
+    },
+  }, 0);
+
+  assert.deepEqual(task?.data, {
+    department: '呼吸内科',
+    doctorName: '王主任',
+    time: '今日 14:00',
+    statusText: '挂号成功',
+    __standardFlowTaskType: 'appointment',
+    __standardFlowTaskTitle: '推荐医生挂号缴费',
+    __standardFlowStepIndex: 0,
+    __standardFlowActionLabel: undefined,
+  });
 });

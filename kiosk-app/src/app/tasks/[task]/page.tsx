@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import TaskFlowPanel from "../../../components/TaskFlowPanel";
-import TaskNavigator from "../../../components/TaskNavigator";
 import { parseFlowEvidence } from "../../../lib/flow-engine";
 import { buildMockJourneyData, Recommendation } from "../../../lib/mock-hospital-data";
 import { getQwenClinicalPlan } from "../../../lib/qwen-clinical-plan";

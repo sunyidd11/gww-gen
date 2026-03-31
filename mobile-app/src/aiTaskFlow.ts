@@ -6,8 +6,8 @@ import type {
   CompletedTaskRecord,
   JourneyContext,
   LocationData,
+  Message,
   RecommendationData,
-  ResumeTaskData,
   StandardTaskFlow,
   TaskCompletionSummary,
   UserProfile,
@@ -150,6 +150,42 @@ export function getLocationTaskPresentation(data: LocationData | Record<string, 
   };
 }
 
+export function mapKioskStageOneCompletion(payload: {
+  department?: string;
+  selectedDoctor?: string;
+  room?: string;
+  appointmentTime?: string;
+}): {
+  completedTitle: string;
+  messageText: string;
+  recommendation: RecommendationData;
+  inlineComponent: Message['component'];
+} {
+  const department = payload.department || '对应科室';
+  const doctor = payload.selectedDoctor || '值班医生';
+  const room = payload.room || '2号诊室';
+  const appointmentTime = payload.appointmentTime || '请按预约时间到院';
+
+  return {
+    completedTitle: '推荐医生挂号缴费',
+    messageText: `“推荐医生挂号缴费”已完成。已同步挂号结果：${department} · ${doctor} · ${room}。`,
+    recommendation: {
+      type: 'checkin',
+      title: '开启下一步：签到候诊排队',
+      target: `${department}签到台（${room}）`,
+    },
+    inlineComponent: {
+      type: 'medical',
+      data: {
+        department,
+        doctorName: doctor,
+        time: appointmentTime,
+        statusText: '挂号成功',
+      },
+    },
+  };
+}
+
 export function getStandardTaskFlow(taskType: StandardTaskFlow['taskType']) {
   return STANDARD_TASK_FLOWS[taskType] ?? null;
 }
@@ -215,9 +251,10 @@ export function buildTaskStepTask(task: AITask, stepIndex: number): AITask | nul
 
   if (task.type === 'appointment' && step.componentType === 'medical') {
     stepData = {
-      symptoms: (baseData.symptoms as string[] | undefined) ?? ['咳嗽', '胸闷'],
-      recommendation: (baseData.recommendation as string | undefined) ?? (baseData.department as string | undefined) ?? '呼吸内科',
-      confidence: (baseData.confidence as number | undefined) ?? 0.92,
+      department: (baseData.department as string | undefined) ?? (baseData.recommendation as string | undefined) ?? '呼吸内科',
+      doctorName: (baseData.doctorName as string | undefined) ?? undefined,
+      time: (baseData.time as string | undefined) ?? undefined,
+      statusText: (baseData.statusText as string | undefined) ?? '挂号成功',
       ...metadata,
     };
   }
@@ -285,9 +322,9 @@ export function createTaskFromComponent(component: AIComponentPayload<AIInlineCo
   });
 }
 
-export function createReopenableTaskFromMessageComponent(component: AIComponentPayload<AIInlineComponentType> | AIComponentPayload<'recommendation' | 'resume_task'> | null | undefined) {
+export function createReopenableTaskFromMessageComponent(component: AIComponentPayload<AIInlineComponentType> | AIComponentPayload<'recommendation'> | null | undefined) {
   if (!component) return null;
-  if (component.type === 'recommendation' || component.type === 'resume_task') return null;
+  if (component.type === 'recommendation') return null;
   return createTaskFromComponent(component as AIComponentPayload<AIInlineComponentType>);
 }
 
@@ -391,6 +428,7 @@ export function recordTaskClose(context: JourneyContext): JourneyContext {
 
   return {
     ...context,
+    activeTaskSnapshot: null,
     componentUsage: [
       {
         componentType: context.activeTaskSnapshot.type,
@@ -452,24 +490,6 @@ export function recordRecommendation(context: JourneyContext, recommendation: Re
 
 export function buildAiContextSummary(context: JourneyContext) {
   return JSON.stringify(context, null, 2);
-}
-
-export function buildResumeTaskComponent(context: JourneyContext): { type: 'resume_task'; data: ResumeTaskData } | null {
-  const snapshot = context.activeTaskSnapshot;
-  if (!snapshot) return null;
-
-  return {
-    type: 'resume_task',
-    data: {
-      title: `继续${snapshot.title}`,
-      target: '返回刚才流程',
-      task: {
-        type: snapshot.type,
-        title: snapshot.title,
-        data: snapshot.data,
-      },
-    },
-  };
 }
 
 export function buildTaskCompletionSummary(_task: AITask): TaskCompletionSummary {

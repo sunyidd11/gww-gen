@@ -7,7 +7,6 @@ import HomeEntryActions from "../../components/HomeEntryActions";
 import PriorityRecommendationPanel from "../../components/PriorityRecommendationPanel";
 import SmartHospitalAssistant from "../../components/SmartHospitalAssistant";
 import TaskFlowPanel from "../../components/TaskFlowPanel";
-import TaskNavigator from "../../components/TaskNavigator";
 import {
   ActionButtons,
   ExamGroupCard,
@@ -181,14 +180,6 @@ export default function ComponentLibraryPage() {
               doctors={[...doctorList]}
               lang="zh"
               detailBaseHref="/register/doctors?symptom=%E5%8F%91%E7%83%AD%E5%92%B3%E5%97%BD&priority=expert-first"
-            />
-          </PreviewCard>
-
-          <PreviewCard name="TaskNavigator" previewClassName="bg-[#F3F4FF] p-2 sm:p-3">
-            <TaskNavigator
-              currentSlug="payment"
-              relatedSlugs={["check-in", "print-report", "queue-waiting"]}
-              lang="zh"
             />
           </PreviewCard>
 
@@ -463,9 +454,6 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={0}
                   flowStage={1}
                 />
-                <div className="mt-6">
-                  <TaskNavigator currentSlug="check-in" relatedSlugs={["queue-waiting", "human-assist", "payment"]} lang="zh" />
-                </div>
               </div>
             </SceneCard>
 
@@ -479,9 +467,6 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={1}
                   flowStage={2}
                 />
-                <div className="mt-6">
-                  <TaskNavigator currentSlug="queue-waiting" relatedSlugs={["check-in", "payment", "human-assist"]} lang="zh" />
-                </div>
               </div>
             </SceneCard>
 
@@ -495,9 +480,6 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={0}
                   flowStage={4}
                 />
-                <div className="mt-6">
-                  <TaskNavigator currentSlug="print-report" relatedSlugs={["payment", "human-assist", "check-in"]} lang="zh" />
-                </div>
               </div>
             </SceneCard>
           </div>

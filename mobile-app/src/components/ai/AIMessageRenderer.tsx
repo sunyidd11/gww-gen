@@ -21,7 +21,6 @@ import type {
   MedicalData,
   ProcessData,
   RecommendationData,
-  ResumeTaskData,
   TipData,
 } from '../../types';
 
@@ -61,19 +60,33 @@ export default function AIMessageRenderer({ component, onOpenTask, preview = fal
   switch (component.type) {
     case 'medical': {
       const data = component.data as MedicalData;
+      const statusText = data.statusText ?? '挂号成功';
+      const department = data.department ?? data.recommendation ?? '对应科室';
+      const doctorName = data.doctorName ?? '值班医生';
+      const time = data.time ?? '请按挂号时间到院';
       return (
         <div {...cardActionProps} className={`mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 sm:p-4 ${cardActionProps?.className ?? ''}`}>
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-hospital-blue sm:text-base">
-            <Stethoscope size={16} /> 智能分诊建议
+            <Stethoscope size={16} /> 预约挂号单
           </div>
-          <div className="space-y-2">
-            <div className="text-xs text-gray-600 sm:text-sm">识别症状：{data.symptoms?.join('、')}</div>
-            <div className="text-base font-bold text-hospital-blue sm:text-lg">建议挂号：{data.recommendation}</div>
-            {data.confidence > 0.8 && (
-              <div className="flex items-center gap-1 text-xs text-green-600">
-                <CheckCircle2 size={12} /> 匹配度高，建议前往
+          <div className="space-y-3">
+            <div className="flex items-center gap-1 text-xs text-green-600 sm:text-sm">
+              <CheckCircle2 size={12} /> {statusText}
+            </div>
+            <div className="rounded-lg bg-white/80 px-3 py-3 text-sm text-gray-700 shadow-sm sm:text-base">
+              <div className="flex items-start justify-between gap-3">
+                <span className="shrink-0 text-gray-500">科室</span>
+                <span className="min-w-0 text-right font-semibold text-gray-900 break-words">{department}</span>
               </div>
-            )}
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <span className="shrink-0 text-gray-500">医生</span>
+                <span className="min-w-0 text-right font-semibold text-gray-900 break-words">{doctorName}</span>
+              </div>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <span className="shrink-0 text-gray-500">时间</span>
+                <span className="min-w-0 text-right font-semibold text-gray-900 break-words">{time}</span>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -173,34 +186,6 @@ export default function AIMessageRenderer({ component, onOpenTask, preview = fal
               className="flex shrink-0 items-center gap-1 self-start rounded-lg bg-hospital-blue px-3 py-2 text-sm font-bold text-white disabled:opacity-50 sm:self-auto"
             >
               立即前往 <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
-      );
-    }
-    case 'resume_task': {
-      const data = component.data as ResumeTaskData;
-      return (
-        <div className="mt-3 rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 p-3 shadow-sm sm:p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-orange-700 sm:text-base">
-            <ClipboardCheck size={16} /> 返回任务
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-sm sm:h-12 sm:w-12">
-                <ClipboardCheck size={20} />
-              </div>
-              <div>
-                <div className="text-base font-bold text-gray-800 sm:text-lg">{data.title}</div>
-                <div className="text-xs text-gray-500 sm:text-sm">{data.target}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => onOpenTask?.(data.task)}
-              disabled={preview || !onOpenTask}
-              className="flex shrink-0 items-center gap-1 self-start rounded-lg bg-orange-500 px-3 py-2 text-sm font-bold text-white disabled:opacity-50 sm:self-auto"
-            >
-              返回任务 <ChevronRight size={14} />
             </button>
           </div>
         </div>
