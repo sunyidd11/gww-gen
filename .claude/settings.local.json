@@ -17,13 +17,7 @@
       "Bash(node --test \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app/src/tests/taskFlow.test.ts\")",
       "Bash(npm --prefix \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app\" run build)",
       "Bash(git fetch:*)",
-      "Bash(git stash:*)",
-      "Bash(git rebase:*)",
-      "Bash(npm --prefix \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/kiosk-app\" run build)",
-      "Bash(npm --prefix \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app\" test -- --runInBand)",
-      "Bash(node --import tsx --test \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app/src/tests/taskFlow.test.ts\")",
-      "Bash(node --import tsx --test \"src/tests/taskFlow.test.ts\")",
-      "Bash(bash ~/.claude/skills/git-pushing/scripts/smart_commit.sh \"feat: update kiosk and mobile task flows\")"
+      "Bash(git stash:*)"
     ]
   }
 }

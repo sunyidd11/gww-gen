@@ -1,11 +1,9 @@
-import Link from "next/link";
 import AuthoritativeDoctorPicker from "../../../components/AuthoritativeDoctorPicker";
 import { parseFlowEvidence } from "../../../lib/flow-engine";
 import {
   PriorityMode,
   Recommendation,
   buildMockJourneyData,
-  isAbnormalItem,
   sortDoctorCandidatesByPriority,
 } from "../../../lib/mock-hospital-data";
 import { getQwenClinicalPlan } from "../../../lib/qwen-clinical-plan";
@@ -27,10 +25,7 @@ type DoctorsPageProps = {
     reportReadyCount?: string;
     queueStatus?: string;
     needsHumanAssist?: string;
-    expertList?: string;
-    fastList?: string;
     selectedDoctor?: string;
-    adjustCount?: string;
     adjustPref?: string;
     flowStage?: string;
     patientName?: string;
@@ -45,7 +40,6 @@ type DoctorsPageProps = {
 export default async function DoctorsPage(props: DoctorsPageProps) {
   const sp = await props.searchParams;
   const symptom = sp.symptom ?? "";
-  const syncTs = Date.now();
   const patientName = sp.patientName ?? "";
   const patientAgeRaw = Number(sp.patientAge ?? "46");
   const patientAge = Number.isFinite(patientAgeRaw) ? Math.max(1, patientAgeRaw) : 46;
@@ -88,35 +82,6 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
   });
   const doctorHintVal = forcedRecommendation?.doctorHint ?? sp.doctorHint;
   const doctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, activePriority, doctorHintVal);
-  const selectedDoctorByQuery = doctors.find((d) => d.name === (sp.selectedDoctor ?? ""));
-  const recommendedDoctor =
-    !isFollowupMode && selectedDoctorByQuery ? selectedDoctorByQuery : doctors[0];
-  const originalDoctor =
-    doctors.find((d) => d.name === (sp.originalDoctor ?? "")) ??
-    doctors.find((d) => journey.appointment.doctor.includes(d.name)) ??
-    doctors[0];
-
-  const abnormalCount = journey.payments.items.filter(
-    (item, idx) => isAbnormalItem(item.name, journey.symptomInput, idx)
-  ).length;
-  const severeAbnormal = abnormalCount >= 2;
-
-  const originalDoctorNoPayHref =
-    `/?completedStage=4&flowNextStage=5&syncTs=${encodeURIComponent(String(syncTs))}&symptom=${encodeURIComponent(symptom)}` +
-    `&department=${encodeURIComponent(journey.recommendation.department)}` +
-    `&patientName=${encodeURIComponent(journey.patient.maskedName)}` +
-    `&patientAge=${encodeURIComponent(String(journey.patient.age))}` +
-    `&patientGender=${encodeURIComponent(journey.patient.gender)}` +
-    `&selectedDoctor=${encodeURIComponent(originalDoctor.name)}`;
-
-  const expertFollowupPayHref =
-    `/?completedStage=4&flowNextStage=5&syncTs=${encodeURIComponent(String(syncTs))}&symptom=${encodeURIComponent(symptom)}` +
-    `&department=${encodeURIComponent(journey.recommendation.department)}` +
-    `&patientName=${encodeURIComponent(journey.patient.maskedName)}` +
-    `&patientAge=${encodeURIComponent(String(journey.patient.age))}` +
-    `&patientGender=${encodeURIComponent(journey.patient.gender)}` +
-    `&selectedDoctor=${encodeURIComponent(recommendedDoctor.name)}`;
-
   const paymentBaseHref =
     `/tasks/payment?symptom=${encodeURIComponent(symptom)}` +
     `&department=${encodeURIComponent(journey.recommendation.department)}` +
@@ -129,109 +94,55 @@ export default async function DoctorsPage(props: DoctorsPageProps) {
 
   const topExpertDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "expert-first", doctorHintVal).slice(0, 3);
   const topFastDoctors = sortDoctorCandidatesByPriority(journey.doctorCandidates, "time-first", doctorHintVal).slice(0, 3);
+  const baseDoctors = activePriority === "expert-first" ? topExpertDoctors : topFastDoctors;
+
+  /**
+   * 解析原医生字段，兼容“姓名 职称”或仅姓名两种格式。
+   */
+  const parseOriginalDoctor = (raw: string): { name: string; title: string } => {
+    const text = raw.trim();
+    if (!text) return { name: "王主任", title: "主任医师" };
+    const titleMatch = text.match(/(主任医师|副主任医师|主治医师)$/);
+    if (titleMatch) {
+      return {
+        name: text.replace(titleMatch[1], "").trim() || "王主任",
+        title: titleMatch[1],
+      };
+    }
+    return { name: text, title: "主任医师" };
+  };
+
+  const originalDoctorInfo = parseOriginalDoctor(sp.originalDoctor ?? "");
+  const sameDeptTail = baseDoctors.filter((d) => d.name !== originalDoctorInfo.name);
+  const followupFirstBase = baseDoctors[0] ?? doctors[0];
+  const followupFirst = {
+    ...(followupFirstBase ?? {
+      specialty: `${journey.recommendation.department}常见病诊治`,
+      nextSlot: "10:30",
+      consultationFee: 50,
+    }),
+    name: originalDoctorInfo.name,
+    title: originalDoctorInfo.title,
+    isFollowupDoctor: true,
+  };
+  const followupDoctors = [followupFirst, ...sameDeptTail].slice(0, 3);
+  const displayDoctors = isFollowupMode ? followupDoctors : baseDoctors;
 
   return (
-    <div className="flex h-full w-full flex-col p-4 md:p-6 text-gray-900">
-      <div className="w-full rounded-2xl border border-gray-100 bg-white shadow-sm p-4 sm:p-6">
-        {!isFollowupMode ? (
-          <div className="mt-2 sm:mt-5">
-              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                <p className="text-[22px] font-bold text-gray-900 mb-4">
-                  {journey.recommendation.department}
-                </p>
-                <AuthoritativeDoctorPicker
-                  doctors={activePriority === "expert-first" ? topExpertDoctors : topFastDoctors}
-                  lang="zh"
-                  detailBaseHref={paymentBaseHref}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="mt-5 space-y-3">
-              {!severeAbnormal ? (
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
-                  <p className="text-sm text-emerald-700">
-                    当前异常较轻，推荐原医生复诊（免挂号费）
-                  </p>
-                  <p className="mt-1 text-[25px] font-bold text-gray-900">
-                    {originalDoctor.name} {originalDoctor.title}
-                  </p>
-                  <div className="mt-3 rounded-lg border border-emerald-200 bg-white px-3 py-2 shadow-sm">
-                    <p className="text-xs text-gray-500">擅长方向</p>
-                    <p className="text-[16px] font-semibold text-gray-900">{originalDoctor.specialty}</p>
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-3">
-                    <Link
-                      href="/"
-                      className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700"
-                    >
-                      返回首页
-                    </Link>
-                    <Link
-                      href={originalDoctorNoPayHref}
-                      className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-center text-[20px] font-bold text-white shadow-lg"
-                    >
-                      原医生复诊（免缴费）
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-                    <p className="text-[22px] font-bold text-gray-900">
-                      {journey.recommendation.department}
-                    </p>
-                    <p className="text-sm text-red-600">
-                      异常项目较多且严重，优先建议专家号复诊
-                    </p>
-                    <p className="mt-1 text-[25px] font-bold text-gray-900">
-                      {recommendedDoctor.name} {recommendedDoctor.title}
-                    </p>
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div className="rounded-lg border border-red-200 bg-white px-3 py-2 shadow-sm">
-                        <p className="text-xs text-gray-500">擅长方向</p>
-                        <p className="text-[16px] font-semibold text-gray-900">{recommendedDoctor.specialty}</p>
-                      </div>
-                      <div className="rounded-lg border border-red-200 bg-white px-3 py-2 shadow-sm">
-                        <p className="text-xs text-gray-500">诊室位置 / 挂号费</p>
-                        <p className="text-[16px] font-semibold text-gray-900">
-                          {journey.appointment.room} / ¥{recommendedDoctor.consultationFee}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <Link
-                        href="/"
-                        className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700"
-                      >
-                        返回首页
-                      </Link>
-                      <Link
-                        href={expertFollowupPayHref}
-                        className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-center text-[20px] font-bold text-white shadow-lg"
-                      >
-                        挂专家号复诊
-                      </Link>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <p className="text-sm text-gray-500">保留原医生复诊选项（免挂号费）</p>
-                    <p className="mt-1 text-[22px] font-bold text-gray-900">
-                      {originalDoctor.name} {originalDoctor.title}
-                    </p>
-                    <div className="mt-3">
-                      <Link
-                        href={originalDoctorNoPayHref}
-                        className="inline-flex min-h-[52px] min-w-[420px] items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3 text-center text-[18px] font-bold text-gray-900 shadow-sm"
-                      >
-                        原医生复诊（免缴费）
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+    <div className="flex h-full w-full flex-col p-4 text-[#3d3959] md:p-6">
+      <div className="w-full rounded-[32px] border border-[#ebe8fa] bg-white p-4 shadow-[0_18px_48px_rgba(114,97,255,0.08)] sm:p-6">
+        <div className="mt-2 sm:mt-5">
+          <div className="rounded-[28px] border border-[#e6e1fb] bg-[#F3F4FF] p-4 shadow-[0_10px_24px_rgba(108,81,233,0.08)]">
+            <p className="mb-4 text-[22px] font-bold text-[#2f2a45]">
+              {journey.recommendation.department}
+            </p>
+            <AuthoritativeDoctorPicker
+              doctors={displayDoctors}
+              lang="zh"
+              detailBaseHref={paymentBaseHref}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

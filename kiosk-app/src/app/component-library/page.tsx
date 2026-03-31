@@ -7,6 +7,7 @@ import HomeEntryActions from "../../components/HomeEntryActions";
 import PriorityRecommendationPanel from "../../components/PriorityRecommendationPanel";
 import SmartHospitalAssistant from "../../components/SmartHospitalAssistant";
 import TaskFlowPanel from "../../components/TaskFlowPanel";
+import TaskNavigator from "../../components/TaskNavigator";
 import {
   ActionButtons,
   ExamGroupCard,
@@ -158,7 +159,7 @@ export default function ComponentLibraryPage() {
 
           <div className="mt-6 space-y-6">
           <PreviewCard name="HomeEntryActions" previewClassName="bg-[#f4f3ff] text-[#3d3959]">
-            <HomeEntryActions lang="zh" />
+            <HomeEntryActions />
           </PreviewCard>
 
           <PreviewCard name="PriorityRecommendationPanel" previewClassName="bg-[#f4f3ff] text-[#3d3959]">
@@ -180,6 +181,14 @@ export default function ComponentLibraryPage() {
               doctors={[...doctorList]}
               lang="zh"
               detailBaseHref="/register/doctors?symptom=%E5%8F%91%E7%83%AD%E5%92%B3%E5%97%BD&priority=expert-first"
+            />
+          </PreviewCard>
+
+          <PreviewCard name="TaskNavigator" previewClassName="bg-[#F3F4FF] p-2 sm:p-3">
+            <TaskNavigator
+              currentSlug="payment"
+              relatedSlugs={["check-in", "print-report", "queue-waiting"]}
+              lang="zh"
             />
           </PreviewCard>
 
@@ -292,7 +301,7 @@ export default function ComponentLibraryPage() {
                 <h3 className="mt-2 text-[32px] font-black leading-tight text-[#3d3959] sm:text-[42px]">
                   请插入医保卡或扫描医保码
                 </h3>
-                <HomeEntryActions lang="zh" />
+                <HomeEntryActions />
                 <p className="mt-8 text-[16px] text-[#6d6889] sm:text-[18px]">
                   若需语音帮助，请点击下方麦克风说出症状，系统将自动推荐挂号。
                 </p>
@@ -454,6 +463,9 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={0}
                   flowStage={1}
                 />
+                <div className="mt-6">
+                  <TaskNavigator currentSlug="check-in" relatedSlugs={["queue-waiting", "human-assist", "payment"]} lang="zh" />
+                </div>
               </div>
             </SceneCard>
 
@@ -467,6 +479,9 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={1}
                   flowStage={2}
                 />
+                <div className="mt-6">
+                  <TaskNavigator currentSlug="queue-waiting" relatedSlugs={["check-in", "payment", "human-assist"]} lang="zh" />
+                </div>
               </div>
             </SceneCard>
 
@@ -480,6 +495,9 @@ export default function ComponentLibraryPage() {
                   initialStepIndex={0}
                   flowStage={4}
                 />
+                <div className="mt-6">
+                  <TaskNavigator currentSlug="print-report" relatedSlugs={["payment", "human-assist", "check-in"]} lang="zh" />
+                </div>
               </div>
             </SceneCard>
           </div>

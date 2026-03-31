@@ -306,7 +306,6 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
         department,
         selectedDoctor: selectedDoctor || current.selectedDoctor,
         room: props.journey.appointment.room,
-        appointmentTime: `${props.journey.appointment.date} ${props.journey.appointment.timeSlot}`,
         callingNumber: props.journey.queue.currentNumber,
         aheadCount: props.journey.queue.waitingCount,
         waitMinutes: queueWaitMinutes,
@@ -336,7 +335,6 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
       department,
       selectedDoctor: selectedDoctor || current.selectedDoctor,
       room: props.journey.appointment.room,
-      appointmentTime: `${props.journey.appointment.date} ${props.journey.appointment.timeSlot}`,
       callingNumber: props.journey.queue.currentNumber,
       aheadCount: String(props.journey.queue.waitingCount),
       waitMinutes: String(queueWaitMinutes),
@@ -481,7 +479,7 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
       <div className="bg-[#f4f3ff] px-6 py-6 sm:px-10 sm:py-8">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium tracking-[0.2em] text-[#9a96bf] uppercase">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#9a96bf]">
               {tt("当前流程", "Current Flow")}
             </p>
             <h2 className="mt-3 text-[28px] font-black tracking-tight text-[#3c3a4a] sm:text-[42px]">

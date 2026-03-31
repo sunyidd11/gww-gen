@@ -612,7 +612,6 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
           <section className="flex-1 lg:basis-1/3">
             <div className="rounded-[28px] border border-[#ebe8fa] bg-[#F3F4FF] p-4 shadow-[0_12px_28px_rgba(108,81,233,0.08)]">
               <div className="mb-4 rounded-[24px] border border-[#e6e1fb] bg-white p-4 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
-                <h2 className="text-[20px] font-semibold">为你推荐</h2>
                 <p className="mt-1 text-sm text-[#6d6889]">
                   基于当前状态自动识别：优先展示最可能任务
                 </p>

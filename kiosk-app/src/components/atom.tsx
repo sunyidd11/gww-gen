@@ -156,17 +156,17 @@ export const PaymentSummaryCard: React.FC<{
         {status === "paid" ? tr(lang, "已支付", "Paid") : tr(lang, "待支付", "Unpaid")}
       </span>
     </div>
-    <div className="divide-y divide-gray-100 px-4 sm:px-5">
+    <div className="divide-y divide-gray-100">
       {items.map((item, idx) => (
-        <div key={`${item.name}-${idx}`} className="flex items-start justify-between gap-3 py-3.5 text-sm sm:py-4 sm:text-base">
-          <span className="min-w-0 flex-1 break-words text-[#8f8a96]">{item.name}</span>
-          <span className="shrink-0 pl-2 font-semibold text-[#2f2a45]">¥{item.price.toFixed(2)}</span>
+        <div key={`${item.name}-${idx}`} className="flex items-center justify-between gap-3 py-3.5 text-sm sm:py-4 sm:text-base">
+          <span className="text-[#8f8a96]">{item.name}</span>
+          <span className="shrink-0 font-semibold text-[#2f2a45]">¥{item.price.toFixed(2)}</span>
         </div>
       ))}
     </div>
-    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#d7d3de] px-4 pt-4 pb-5 sm:px-5">
-      <span className="min-w-0 flex-1 text-base font-bold text-[#2f2a45] sm:text-lg">{tr(lang, "合计", "Total")}</span>
-      <span className="shrink-0 text-right text-xl font-bold text-[#6A46FF] sm:text-2xl">¥{total.toFixed(2)}</span>
+    <div className="mt-4 flex items-center justify-between border-t border-[#d7d3de] pt-4">
+      <span className="text-base font-bold text-[#2f2a45] sm:text-lg">{tr(lang, "合计", "Total")}</span>
+      <span className="text-xl font-bold text-[#6A46FF] sm:text-2xl">¥{total.toFixed(2)}</span>
     </div>
   </div>
 );
@@ -254,7 +254,7 @@ export const StateBlock: React.FC<{
   lang?: AppLang;
 }> = ({ type, message, lang = "zh" }) => {
   const configs = {
-    empty: { icon: FileText, color: "text-gray-300", defaultMsg: tr(lang, "暂无相关数据", "No related data") },
+    empty: { icon: FileText, color: "text-[#c7c2e2]", defaultMsg: tr(lang, "暂无相关数据", "No related data") },
     loading: { icon: Loader2, color: "text-[#6A46FF]", defaultMsg: tr(lang, "正在努力加载中...", "Loading...") },
     error: { icon: AlertCircle, color: "text-rose-500", defaultMsg: tr(lang, "服务暂时不可用", "Service temporarily unavailable") },
   };
@@ -287,9 +287,9 @@ export const ExamGroupCard: React.FC<{
   <div className="w-full space-y-0 overflow-hidden rounded-[28px] bg-white shadow-[0_12px_28px_rgba(108,81,233,0.08)]">
     <div className="flex items-center gap-2.5 rounded-none bg-[#F3F4FF] px-4 py-4 sm:px-5 sm:py-4.5">
       <FileText className="h-5 w-5 shrink-0 text-[#4b465f]" strokeWidth={1.75} />
-      <span className="min-w-0 flex-1 break-words text-base font-bold text-[#3d3959] sm:text-lg">{title}</span>
+      <span className="text-base font-bold text-[#3d3959] sm:text-lg">{title}</span>
     </div>
-    <div className="divide-y divide-gray-100 px-4 sm:px-5">
+    <div className="divide-y divide-gray-100">
       {exams.map((exam, idx) => {
         const done = exam.status === "completed";
         return (
@@ -299,10 +299,10 @@ export const ExamGroupCard: React.FC<{
             className="flex w-full items-start justify-between gap-3 py-4 text-left transition hover:bg-[#faf9ff] sm:py-4"
           >
             <div className="min-w-0 flex-1">
-              <div className="break-words text-sm text-[#8f8a96] sm:text-base">{exam.name}</div>
+              <div className="text-sm text-[#8f8a96] sm:text-base">{exam.name}</div>
             </div>
-            <span className={`flex shrink-0 items-center gap-1 pl-2 text-sm sm:text-base ${done ? "text-[#8f8a96]" : "font-medium text-[#6A46FF]"}`}>
-              <span className="whitespace-nowrap">{done ? tr(lang, "已完成", "Completed") : tr(lang, "待检查", "Pending")}</span>
+            <span className={`flex shrink-0 items-center gap-1 text-sm sm:text-base ${done ? "text-[#8f8a96]" : "font-medium text-[#6A46FF]"}`}>
+              {done ? tr(lang, "已完成", "Completed") : tr(lang, "待检查", "Pending")}
               <ChevronRight className="h-4 w-4 opacity-70" strokeWidth={2} />
             </span>
           </button>
@@ -336,6 +336,7 @@ export const ActionButtons: React.FC<{
     {primaryLabel ? (
       <button
         type="button"
+        data-primary-action="true"
         onClick={onPrimary}
         disabled={disabled}
         className="flex-[2] rounded-full bg-[#6b45f6] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(107,69,246,0.22)] transition hover:bg-[#5d35f0] disabled:opacity-50"

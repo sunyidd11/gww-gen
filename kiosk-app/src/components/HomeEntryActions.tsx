@@ -3,7 +3,6 @@
 import { CreditCard, QrCode } from "lucide-react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AppLang, tr } from "../lib/i18n-shared";
 import {
   buildStageHref,
   getDefaultJourneyProgress,
@@ -12,18 +11,13 @@ import {
   writeJourneyProgress,
 } from "../lib/journey-progress";
 
-type HomeEntryActionsProps = {
-  lang: AppLang;
-};
-
 /**
  * 首页入口操作区：
  * - 插入医保卡：从第 1 阶段重新开始
  * - 扫描医保码：按本地记录自动进入下一阶段
  */
-export default function HomeEntryActions(props: HomeEntryActionsProps) {
+export default function HomeEntryActions() {
   const router = useRouter();
-  const tt = (zh: string, en: string) => tr(props.lang, zh, en);
 
   /**
    * 将一体机阶段状态同步到手机端应用。
@@ -43,6 +37,8 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
     if (typeof window === "undefined") return;
     const mobileBase = process.env.NEXT_PUBLIC_MOBILE_APP_URL?.trim();
     if (!mobileBase) return;
+    const dedupeKey = `mobile-sync-${params.completedStage}-${params.nextStage}-${params.symptom}-${params.department}-${params.selectedDoctor}-${params.syncToken ?? ""}`;
+    if (window.sessionStorage.getItem(dedupeKey) === "1") return;
     try {
       await fetch(`${mobileBase.replace(/\/$/, "")}/api/kiosk-stage`, {
         method: "POST",
@@ -61,6 +57,7 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           ts: params.syncToken ? Number(params.syncToken) : Date.now(),
         }),
       });
+      window.sessionStorage.setItem(dedupeKey, "1");
     } catch {
       // 手机端未启动或跨域失败时忽略，不影响一体机主流程。
     }
@@ -189,15 +186,15 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
             originalDoctor: "王主任",
             department: "呼吸内科",
           });
-          router.push(`/register/recommend?${q.toString()}`);
+          router.push(`/register/doctors?${q.toString()}`);
         }}
         className="block rounded-[28px] border border-[#ebe8fa] bg-white p-6 text-left shadow-[0_12px_28px_rgba(108,81,233,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(108,81,233,0.12)]"
       >
         <div className="mb-4 inline-flex rounded-[20px] bg-[#F3F4FF] p-3 text-[#6A46FF] shadow-[0_8px_20px_rgba(108,81,233,0.14)]">
           <CreditCard size={34} />
         </div>
-        <p className="text-[24px] font-bold text-[#2f2a45]">{tt("插入医保卡", "Insert Card")}</p>
-        <p className="mt-2 text-[18px] text-[#6d6889]">{tt("将卡片平稳插入读卡区", "Insert card into reader")}</p>
+        <p className="text-[24px] font-bold text-[#2f2a45]">插入医保卡</p>
+        <p className="mt-2 text-[18px] text-[#6d6889]">将卡片平稳插入读卡区</p>
       </button>
 
       <button
@@ -212,8 +209,8 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
         <div className="mb-4 inline-flex rounded-[20px] bg-[#F3F4FF] p-3 text-[#6A46FF] shadow-[0_8px_20px_rgba(108,81,233,0.14)]">
           <QrCode size={34} />
         </div>
-        <p className="text-[24px] font-bold text-[#2f2a45]">{tt("扫描医保码", "Scan Insurance QR")}</p>
-        <p className="mt-2 text-[18px] text-[#6d6889]">{tt("将二维码对准扫码区域", "Align QR with scanner")}</p>
+        <p className="text-[24px] font-bold text-[#2f2a45]">扫描医保码</p>
+        <p className="mt-2 text-[18px] text-[#6d6889]">将二维码对准扫码区域</p>
       </button>
     </div>
   );
