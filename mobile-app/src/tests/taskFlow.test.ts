@@ -8,9 +8,12 @@ import {
   buildTaskStepTask,
   buildUserProfileSummary,
   createJourneyContext,
+  createReopenableTaskFromMessageComponent,
   createTaskFromComponent,
   getInitialTaskStep,
+  getLocationTaskPresentation,
   getStandardTaskFlow,
+  normalizeLocationData,
   normalizeTaskForFlow,
   recordTaskClose,
   recordTaskCompletion,
@@ -84,6 +87,105 @@ test('task factory should create task only when user manually opens it', () => {
   assert.equal(getInitialTaskStep({ currentStep: 2 }), 2);
 });
 
+test('location task factory should preserve dynamic props payload', () => {
+  const task = createTaskFromComponent({
+    type: 'location',
+    data: {
+      title: '检验科',
+      fields: [
+        { label: '楼层', value: '2层' },
+        { label: '窗口', value: '3号窗口' },
+        { label: '路线', value: '电梯右转直行30米' },
+      ],
+      routePreview: {
+        title: '推荐路线',
+        steps: ['乘电梯到2层', '右转直行', '到达检验科'],
+      },
+    },
+  });
+
+  assert.equal(task.type, 'location');
+  assert.equal(task.title, '位置导航');
+  assert.deepEqual(task.data, {
+    title: '检验科',
+    fields: [
+      { label: '楼层', value: '2层' },
+      { label: '窗口', value: '3号窗口' },
+      { label: '路线', value: '电梯右转直行30米' },
+    ],
+    routePreview: {
+      title: '推荐路线',
+      steps: ['乘电梯到2层', '右转直行', '到达检验科'],
+    },
+  });
+});
+
+test('normalizeLocationData should keep dynamic location props in order', () => {
+  const normalized = normalizeLocationData({
+    title: '检验科',
+    fields: [
+      { label: '楼层', value: '2层' },
+      { label: '窗口', value: '3号窗口' },
+      { label: '路线', value: '电梯右转直行30米' },
+    ],
+    routePreview: {
+      title: '推荐路线',
+      steps: ['乘电梯到2层', '右转直行', '到达检验科'],
+    },
+  });
+
+  assert.deepEqual(normalized, {
+    title: '检验科',
+    fields: [
+      { label: '楼层', value: '2层' },
+      { label: '窗口', value: '3号窗口' },
+      { label: '路线', value: '电梯右转直行30米' },
+    ],
+    routePreview: {
+      title: '推荐路线',
+      steps: ['乘电梯到2层', '右转直行', '到达检验科'],
+    },
+    actionLabel: undefined,
+  });
+});
+
+test('normalizeLocationData should convert legacy location props to dynamic fields', () => {
+  const normalized = normalizeLocationData({
+    destination: '门诊楼2层检验科',
+    floor: '2层',
+    direction: '电梯右转直行30米',
+  });
+
+  assert.deepEqual(normalized, {
+    title: '门诊楼2层检验科',
+    fields: [
+      { label: '楼层', value: '2层' },
+      { label: '路线', value: '电梯右转直行30米' },
+    ],
+    routePreview: undefined,
+    actionLabel: undefined,
+  });
+});
+
+test('getLocationTaskPresentation should prioritize preset map and compact info panel', () => {
+  const presentation = getLocationTaskPresentation({
+    title: '门诊楼2层检验科',
+    fields: [
+      { label: '楼层', value: '2层' },
+      { label: '检查室', value: 'B203' },
+    ],
+    routePreview: {
+      title: '步行导航',
+      steps: ['乘电梯到2层', '右转经过导诊台', '到达 B203'],
+      eta: '约3分钟',
+    },
+  });
+
+  assert.equal(presentation.showPresetMap, true);
+  assert.equal(presentation.mapPanelClassName, 'min-h-[320px] sm:min-h-[420px]');
+  assert.equal(presentation.infoPanelClassName, 'space-y-3 sm:space-y-4');
+});
+
 test('user-initiated request should still auto-open current task card', () => {
   const result = applyAiResponse({
     component: {
@@ -95,6 +197,36 @@ test('user-initiated request should still auto-open current task card', () => {
   assert.equal(result.activeTask?.type, 'appointment');
   assert.equal(result.activeTask?.title, '推荐医生挂号缴费');
   assert.equal(result.taskStep, 1);
+});
+
+test('createReopenableTaskFromMessageComponent should reopen task-backed components', () => {
+  const task = createReopenableTaskFromMessageComponent({
+    type: 'process',
+    data: {
+      steps: ['到签到机刷卡', '确认门诊信息', '在候诊区等候叫号'],
+      currentStep: 1,
+    },
+  });
+
+  assert.equal(task?.type, 'process');
+  assert.equal(task?.title, '流程指引');
+  assert.deepEqual(task?.data, {
+    steps: ['到签到机刷卡', '确认门诊信息', '在候诊区等候叫号'],
+    currentStep: 1,
+  });
+});
+
+test('createReopenableTaskFromMessageComponent should ignore non-task message components', () => {
+  const task = createReopenableTaskFromMessageComponent({
+    type: 'recommendation',
+    data: {
+      type: 'checkin',
+      title: '前往签到',
+      target: '呼吸内科',
+    },
+  });
+
+  assert.equal(task, null);
 });
 
 test('journey context should track open, step change, selection and completion as JSON summary', () => {
