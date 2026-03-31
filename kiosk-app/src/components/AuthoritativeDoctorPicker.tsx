@@ -50,25 +50,25 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
             className={[
               "w-full rounded-lg px-3 py-3 text-left transition",
               active
-                ? "border-2 border-blue-400 bg-blue-500/10"
-                : "border border-white/10 bg-white/5 hover:border-white/25",
+                ? "border-2 border-blue-400 bg-blue-50"
+                : "border border-gray-200 bg-white hover:border-gray-300 shadow-sm",
             ].join(" ")}
           >
-            <p className="text-[20px] font-bold text-white">
+            <p className="text-[20px] font-bold text-gray-900">
               {doctor.name} {doctor.title}
             </p>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-                <p className="text-xs text-white/60">{tr(props.lang, "擅长方向", "Specialty")}</p>
-                <p className="text-[15px] font-semibold text-white">{doctor.specialty}</p>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs text-gray-500">擅长方向</p>
+                <p className="text-[15px] font-semibold text-gray-900">{doctor.specialty}</p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-                <p className="text-xs text-white/60">{tr(props.lang, "最早号源", "Earliest Slot")}</p>
-                <p className="text-[15px] font-semibold text-white">{doctor.nextSlot}</p>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs text-gray-500">最早号源</p>
+                <p className="text-[15px] font-semibold text-gray-900">{doctor.nextSlot}</p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-                <p className="text-xs text-white/60">{tr(props.lang, "挂号费", "Registration Fee")}</p>
-                <p className="text-[15px] font-semibold text-white">¥{doctor.consultationFee}</p>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs text-gray-500">挂号费</p>
+                <p className="text-[15px] font-semibold text-gray-900">¥{doctor.consultationFee}</p>
               </div>
             </div>
           </button>
@@ -79,16 +79,16 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-xl border border-white/25 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-black"
+          className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm"
         >
-          {tr(props.lang, "返回首页", "Home")}
+          返回首页
         </button>
         <button
           type="button"
           onClick={confirm}
-          className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-center text-[20px] font-bold text-white"
+          className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-center text-[20px] font-bold text-white shadow-lg"
         >
-          {tr(props.lang, "确认挂号", "Confirm Registration")}
+          确认挂号
         </button>
       </div>
     </div>
