@@ -12,7 +12,12 @@
       "Bash(GIT_EDITOR=true git rebase --continue)",
       "Bash(git add:*)",
       "Bash(GIT_EDITOR=\":\" git rebase --continue)",
-      "Bash(GIT_EDITOR=: git rebase --continue)"
+      "Bash(GIT_EDITOR=: git rebase --continue)",
+      "Bash(git push:*)",
+      "Bash(node --test \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app/src/tests/taskFlow.test.ts\")",
+      "Bash(npm --prefix \"c:/Users/X1 Yoga/Documents/GitHub/gww-gen/mobile-app\" run build)",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

@@ -201,6 +201,38 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     };
   };
 
+  const isNavigationOrProcessQuestion = (text: string) => {
+    const q = text.trim().toLowerCase();
+    if (!q) return false;
+    const keywords = [
+      "导航", "路线", "路怎么走", "怎么走", "在哪", "哪里", "几楼", "几层", "怎么去",
+      "取药流程", "缴费流程", "报到流程", "签到流程", "挂号流程", "打印流程", "就医顺序",
+      "流程", "步骤", "先做什么", "下一步", "怎么办", "如何", "怎么操作",
+      "location", "navigation", "where", "floor", "route", "process", "step", "how to",
+    ];
+    return keywords.some((keyword) => q.includes(keyword));
+  };
+
+  const forwardQuestionToMobile = async (question: string) => {
+    const mobileBase = process.env.NEXT_PUBLIC_MOBILE_APP_URL?.trim();
+    if (!mobileBase) return false;
+    try {
+      const resp = await fetch(`${mobileBase.replace(/\/$/, "")}/api/kiosk-handoff`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          source: "kiosk",
+          ts: Date.now(),
+          context: buildFlowContext(),
+        }),
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  };
+
   const refreshSuggestionsByContext = async () => {
     try {
       const resp = await fetch("/api/voice-intent", {
@@ -251,7 +283,6 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     if (isPositiveConfirmation(query)) {
       setQaAnswer("好的，正在为您自动确认并进入下一步...");
       setTimeout(() => {
-        // Try to find the primary blue action button or link
         const primaryBtn = document.querySelector('a.bg-blue-600, button.bg-blue-600, .bg-blue-600') as HTMLElement;
         if (primaryBtn) {
           primaryBtn.click();
@@ -261,6 +292,18 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       }, 800);
       setVoiceHint("");
       return;
+    }
+
+    if (isNavigationOrProcessQuestion(query)) {
+      const forwarded = await forwardQuestionToMobile(query);
+      if (forwarded) {
+        lastQuestionRef.current = query;
+        setQaAnswer("已同步到手机端继续处理，请在手机中查看导航或流程指引。");
+        setInput("");
+        setVoiceHint("");
+        setIsAnalyzing(false);
+        return;
+      }
     }
 
     if ((pathname === "/register/doctors" || pathname === "/register/recommend") && wantsAuthoritativeDoctors(query)) {

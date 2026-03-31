@@ -126,9 +126,13 @@ function mapKioskCompletionToMessage(payload: KioskStagePayload): {
       inlineComponent: {
         type: 'location',
         data: {
-          destination: `${department}签到台`,
-          floor: room,
-          direction: `就诊医生：${doctor}`,
+          title: `${department}签到台`,
+          fields: [
+            { label: '诊室', value: room },
+            { label: '医生', value: doctor },
+            { label: '当前任务', value: '先签到，再到候诊区等待叫号' },
+          ],
+          actionLabel: '查看签到路线',
         },
       },
     };
@@ -199,6 +203,8 @@ function increaseCallingNumber(value: string): string {
   return `${prefix}${String(next).padStart(numPart.length, '0')}`;
 }
 
+const USER_PROFILE_STORAGE_KEY = 'mobile-user-profile-v1';
+
 const defaultUserProfile: UserProfile = {
   basicInfo: {
     name: '张三',
@@ -241,7 +247,16 @@ export default function App() {
   const [taskStep, setTaskStep] = useState(0);
   const [history, setHistory] = useState<TaskRecord[]>([]);
   const [journeyContext, setJourneyContext] = useState<JourneyContext>(() => createJourneyContext());
-  const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    if (typeof window === 'undefined') return defaultUserProfile;
+    try {
+      const raw = window.localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+      if (!raw) return defaultUserProfile;
+      return JSON.parse(raw) as UserProfile;
+    } catch {
+      return defaultUserProfile;
+    }
+  });
   const [taskCompletionSummary, setTaskCompletionSummary] = useState<TaskCompletionSummary | null>(null);
   const [pendingCompletionRecommendation, setPendingCompletionRecommendation] = useState<RecommendationData | null>(null);
 
@@ -253,6 +268,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const latestKioskTsRef = useRef(0);
+  const latestKioskHandoffTsRef = useRef(0);
   const queueDoneAnnouncedRef = useRef(false);
   const queueAutoBackScheduledRef = useRef(false);
 
@@ -288,6 +304,11 @@ export default function App() {
   }, [messages]);
 
   useEffect(() => {
+    try {
+      window.localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(userProfile));
+    } catch {
+      // ignore local persistence errors
+    }
     void syncUserProfileToLocalApi(userProfile);
   }, [userProfile]);
 
@@ -298,9 +319,45 @@ export default function App() {
     let cancelled = false;
     const poll = async () => {
       try {
-        const resp = await fetch('/api/kiosk-stage', { method: 'GET' });
-        const data = await resp.json() as { ok?: boolean; data?: KioskStagePayload | null };
-        const payload = data?.data;
+        const [stageResp, handoffResp] = await Promise.all([
+          fetch('/api/kiosk-stage', { method: 'GET' }),
+          fetch('/api/kiosk-handoff', { method: 'GET' }),
+        ]);
+        const stageData = await stageResp.json() as { ok?: boolean; data?: KioskStagePayload | null };
+        const handoffData = await handoffResp.json() as {
+          ok?: boolean;
+          data?: {
+            question?: string;
+            source?: string;
+            ts?: number;
+            context?: {
+              pathname?: string;
+              task?: string;
+              stage?: string;
+              symptom?: string;
+              department?: string;
+            };
+          } | null;
+        };
+
+        const handoffPayload = handoffData?.data;
+        const handoffTs = Number(handoffPayload?.ts ?? 0);
+        if (!cancelled && handoffPayload?.question && Number.isFinite(handoffTs) && handoffTs > latestKioskHandoffTsRef.current) {
+          latestKioskHandoffTsRef.current = handoffTs;
+          setActiveView('business');
+          setCurrentId(1);
+          setHasIdentity(false);
+          setTaskCompletionSummary(null);
+          setPendingCompletionRecommendation(null);
+          setActiveTask(null);
+          setTaskStep(0);
+          void sendMessage(handoffPayload.question, {
+            appendUserMessage: true,
+            autoOpenTask: true,
+          });
+        }
+
+        const payload = stageData?.data;
         if (!payload || cancelled) return;
         const ts = Number(payload.ts ?? 0);
         if (!Number.isFinite(ts) || ts <= latestKioskTsRef.current) return;
@@ -601,11 +658,13 @@ export default function App() {
           - payment: { "lineItems": [{"name": "项目名称", "price": 45.0}], "total": 197.5, "statusLabel": "待支付" }（lineItems/total/statusLabel 可选）
           - examination: { "departmentLabel": "检验科（2楼）", "items": [{"name": "血常规(五分类)", "status": "completed"}, {"name": "项目2", "status": "pending", "location": "可选地点"}] }
           - meds: { "total": 45, "pickupWindow": "3号 门诊药房", "pickupCode": "28", "medicineItems": [{"name": "药品规格全名", "price": 32.5}] }（medicineItems 每项含 name+price；total 可选，默认同 medicineItems 合计）
+          - location: { "title": "检验科", "fields": [{"label": "楼层", "value": "2层"}, {"label": "窗口", "value": "3号窗口"}, {"label": "路线", "value": "电梯右转直行30米"}], "routePreview": { "title": "推荐路线", "steps": ["乘电梯到2层", "右转直行", "到达检验科"], "eta": "约2分钟" }, "actionLabel": "查看路线" }
           - recommendation: { "type": "checkin", "title": "前往签到", "target": "呼吸内科" }
 
           规则示例：
           - 用户问“肚子疼挂什么科” -> 返回 medical，不要同时返回 appointment。
           - 用户明确要挂号 -> 返回 appointment。
+          - 用户询问去哪里/怎么走/在哪签到/去哪检查/去哪取药 -> 可返回 location，fields 必须按当前场景动态给出，不要写死 destination/floor/direction 三字段。
           - 用户完成挂号 -> 文本说明已完成，并在 recommendation 中推荐签到。
           - 用户完成检查 -> 文本说明已完成，并在 recommendation 中推荐查报告。
           - 不要把“签到 + 缴费 + 检查”在一次回复里一起安排。`;

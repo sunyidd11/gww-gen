@@ -27,9 +27,19 @@ export const messageCardSamples: Array<{ title: string; component: AIComponentPa
     component: {
       type: 'location',
       data: {
-        destination: '门诊楼 2 层检验科',
-        floor: '2 层',
-        direction: '电梯右转直行 30 米',
+        title: '门诊楼 2 层检验科',
+        fields: [
+          { label: '楼层', value: '2 层' },
+          { label: '窗口', value: '3 号窗口' },
+          { label: '路线', value: '电梯右转直行 30 米' },
+          { label: '预计步行', value: '约 2 分钟' },
+        ],
+        routePreview: {
+          title: '推荐路线',
+          steps: ['乘电梯到 2 层', '右转直行 30 米', '到达检验科服务台'],
+          eta: '约 2 分钟',
+        },
+        actionLabel: '查看路线',
       },
     },
   },
@@ -185,9 +195,19 @@ export const taskPanelSamples: Array<{ title: string; task: AITask; taskStep?: n
       type: 'location',
       title: '位置导航',
       data: {
-        destination: '门诊楼 2 层检验科',
-        floor: '2 层',
-        direction: '电梯右转直行 30 米',
+        title: '门诊楼 2 层检验科',
+        fields: [
+          { label: '楼层', value: '2 层' },
+          { label: '检查室', value: 'B203' },
+          { label: '路线', value: '电梯右转直行 30 米' },
+          { label: '地标', value: '经过放射科后左侧' },
+        ],
+        routePreview: {
+          title: '步行导航',
+          steps: ['乘电梯到 2 层', '右转经过导诊台', '继续直行到 B203'],
+          eta: '约 3 分钟',
+        },
+        actionLabel: '开始导航',
       },
     },
   },

@@ -43,8 +43,6 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
     if (typeof window === "undefined") return;
     const mobileBase = process.env.NEXT_PUBLIC_MOBILE_APP_URL?.trim();
     if (!mobileBase) return;
-    const dedupeKey = `mobile-sync-${params.completedStage}-${params.nextStage}-${params.symptom}-${params.department}-${params.selectedDoctor}-${params.syncToken ?? ""}`;
-    if (window.sessionStorage.getItem(dedupeKey) === "1") return;
     try {
       await fetch(`${mobileBase.replace(/\/$/, "")}/api/kiosk-stage`, {
         method: "POST",
@@ -63,7 +61,6 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           ts: params.syncToken ? Number(params.syncToken) : Date.now(),
         }),
       });
-      window.sessionStorage.setItem(dedupeKey, "1");
     } catch {
       // 手机端未启动或跨域失败时忽略，不影响一体机主流程。
     }

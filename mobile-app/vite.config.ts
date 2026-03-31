@@ -43,13 +43,29 @@ type KioskStagePayload = {
   ts?: number;
 };
 
+type KioskHandoffPayload = {
+  question?: string;
+  source?: string;
+  ts?: number;
+  context?: {
+    pathname?: string;
+    task?: string;
+    stage?: string;
+    symptom?: string;
+    department?: string;
+  };
+};
+
 let latestKioskStage: KioskStagePayload | null = null;
 let latestUserProfile: Record<string, unknown> | null = null;
+let latestKioskHandoff: KioskHandoffPayload | null = null;
 
 /**
  * Vite dev 中提供手机端本地 API：
  * - POST /api/kiosk-stage 接收一体机状态码
  * - GET  /api/kiosk-stage 返回最新状态
+ * - POST /api/kiosk-handoff 接收一体机导航/流程问题
+ * - GET  /api/kiosk-handoff 返回最新待处理请求
  */
 function kioskStageApiPlugin() {
   return {
@@ -58,7 +74,8 @@ function kioskStageApiPlugin() {
       server.middlewares.use((req, res, next) => {
         const isKioskStage = req.url?.startsWith('/api/kiosk-stage');
         const isUserProfile = req.url?.startsWith('/api/user-profile');
-        if (!isKioskStage && !isUserProfile) return next();
+        const isKioskHandoff = req.url?.startsWith('/api/kiosk-handoff');
+        if (!isKioskStage && !isUserProfile && !isKioskHandoff) return next();
 
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -72,11 +89,20 @@ function kioskStageApiPlugin() {
         }
 
         if (req.method === 'GET') {
+          const data = isKioskStage
+            ? latestKioskStage
+            : isKioskHandoff
+              ? latestKioskHandoff
+              : latestUserProfile;
+
+          if (isKioskStage) latestKioskStage = null;
+          if (isKioskHandoff) latestKioskHandoff = null;
+
           res.statusCode = 200;
           res.end(
             JSON.stringify({
               ok: true,
-              data: isKioskStage ? latestKioskStage : latestUserProfile,
+              data,
             })
           );
           return;
@@ -117,6 +143,19 @@ function kioskStageApiPlugin() {
               };
               res.statusCode = 200;
               res.end(JSON.stringify({ ok: true, data: latestKioskStage }));
+              return;
+            }
+
+            if (isKioskHandoff) {
+              const parsed = JSON.parse(raw || '{}') as KioskHandoffPayload;
+              latestKioskHandoff = {
+                question: String(parsed.question ?? '').trim(),
+                source: parsed.source ?? 'kiosk',
+                ts: parsed.ts ?? Date.now(),
+                context: parsed.context ?? {},
+              };
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, data: latestKioskHandoff }));
               return;
             }
 

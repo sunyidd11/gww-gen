@@ -37,10 +37,25 @@ export interface ProcessData {
   currentStep?: number;
 }
 
+export interface LocationField {
+  label: string;
+  value: string;
+}
+
+export interface LocationRoutePreview {
+  title?: string;
+  steps?: string[];
+  eta?: string;
+}
+
 export interface LocationData {
-  destination: string;
-  floor: string;
-  direction: string;
+  title?: string;
+  fields?: LocationField[];
+  routePreview?: LocationRoutePreview;
+  actionLabel?: string;
+  destination?: string;
+  floor?: string;
+  direction?: string;
 }
 
 export interface TipData {

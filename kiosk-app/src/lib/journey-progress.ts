@@ -28,36 +28,29 @@ export function getDefaultJourneyProgress(): JourneyProgressState {
 }
 
 /**
- * 读取本地流程进度（仅客户端可用）。
+ * 刷新后不恢复流程进度；如存在旧缓存则直接清空。
  */
 export function readJourneyProgress(): JourneyProgressState {
   if (typeof window === "undefined") return getDefaultJourneyProgress();
   try {
-    const raw = window.localStorage.getItem(JOURNEY_PROGRESS_KEY);
-    if (!raw) return getDefaultJourneyProgress();
-    const parsed = JSON.parse(raw) as Partial<JourneyProgressState>;
-    const nextStage = Number(parsed.nextStage);
-    const validStage: JourneyStage = nextStage >= 1 && nextStage <= 5 ? (nextStage as JourneyStage) : 1;
-    return {
-      nextStage: validStage,
-      symptom: String(parsed.symptom ?? ""),
-      department: String(parsed.department ?? ""),
-      selectedDoctor: String(parsed.selectedDoctor ?? ""),
-      patientName: String(parsed.patientName ?? ""),
-      patientAge: Number(parsed.patientAge ?? 46) || 46,
-      patientGender: parsed.patientGender === "女" ? "女" : "男",
-    };
+    window.localStorage.removeItem(JOURNEY_PROGRESS_KEY);
   } catch {
-    return getDefaultJourneyProgress();
+    // ignore
   }
+  return getDefaultJourneyProgress();
 }
 
 /**
- * 写入本地流程进度（仅客户端可用）。
+ * 当前会话内仍可写入，但刷新后会被 readJourneyProgress 清空。
  */
 export function writeJourneyProgress(state: JourneyProgressState): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(JOURNEY_PROGRESS_KEY, JSON.stringify(state));
+}
+
+export function clearJourneyProgress(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(JOURNEY_PROGRESS_KEY);
 }
 
 /**
