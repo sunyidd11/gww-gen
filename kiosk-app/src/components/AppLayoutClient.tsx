@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Mic, Loader2, Bot } from "lucide-react";
@@ -200,6 +201,38 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     };
   };
 
+  const isNavigationOrProcessQuestion = (text: string) => {
+    const q = text.trim().toLowerCase();
+    if (!q) return false;
+    const keywords = [
+      "导航", "路线", "路怎么走", "怎么走", "在哪", "哪里", "几楼", "几层", "怎么去",
+      "取药流程", "缴费流程", "报到流程", "签到流程", "挂号流程", "打印流程", "就医顺序",
+      "流程", "步骤", "先做什么", "下一步", "怎么办", "如何", "怎么操作",
+      "location", "navigation", "where", "floor", "route", "process", "step", "how to",
+    ];
+    return keywords.some((keyword) => q.includes(keyword));
+  };
+
+  const forwardQuestionToMobile = async (question: string) => {
+    const mobileBase = process.env.NEXT_PUBLIC_MOBILE_APP_URL?.trim();
+    if (!mobileBase) return false;
+    try {
+      const resp = await fetch(`${mobileBase.replace(/\/$/, "")}/api/kiosk-handoff`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          source: "kiosk",
+          ts: Date.now(),
+          context: buildFlowContext(),
+        }),
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  };
+
   const refreshSuggestionsByContext = async () => {
     try {
       const resp = await fetch("/api/voice-intent", {
@@ -250,7 +283,6 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
     if (isPositiveConfirmation(query)) {
       setQaAnswer("好的，正在为您自动确认并进入下一步...");
       setTimeout(() => {
-        // Try to find the primary blue action button or link
         const primaryBtn = document.querySelector('a.bg-blue-600, button.bg-blue-600, .bg-blue-600') as HTMLElement;
         if (primaryBtn) {
           primaryBtn.click();
@@ -260,6 +292,18 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       }, 800);
       setVoiceHint("");
       return;
+    }
+
+    if (isNavigationOrProcessQuestion(query)) {
+      const forwarded = await forwardQuestionToMobile(query);
+      if (forwarded) {
+        lastQuestionRef.current = query;
+        setQaAnswer("已同步到手机端继续处理，请在手机中查看导航或流程指引。");
+        setInput("");
+        setVoiceHint("");
+        setIsAnalyzing(false);
+        return;
+      }
     }
 
     if ((pathname === "/register/doctors" || pathname === "/register/recommend") && wantsAuthoritativeDoctors(query)) {
@@ -431,7 +475,15 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-gray-900 overflow-hidden">
       <div className="relative flex flex-col h-full w-full max-w-[calc(100vh*9/16)] bg-hospital-bg shadow-2xl overflow-hidden border-x border-gray-200">
-        
+        {pathname !== "/component-library" ? (
+          <Link
+            href="/component-library"
+            className="fixed bottom-4 right-4 z-50 rounded-full border border-white/20 bg-black/70 px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-sm transition hover:bg-black/80"
+          >
+            组件库
+          </Link>
+        ) : null}
+
         {/* Top 1/5: AI Chat */}
         <div className="flex h-[20%] flex-col overflow-y-auto border-b border-gray-200 p-4 bg-white/50">
           <div className="flex-1 overflow-y-auto flex flex-col justify-end gap-3 pb-2">

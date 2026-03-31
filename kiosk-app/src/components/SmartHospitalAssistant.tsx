@@ -606,13 +606,14 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
   }, [knowledgeBase, categoriesInOrder]);
 
   return (
-    <div className="w-full h-full bg-black text-white">
+    <div className="h-full w-full bg-[#f7f5ff] text-[#3d3959]">
       <div className="mx-auto max-w-[1400px] p-4 md:p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
           <section className="flex-1 lg:basis-1/3">
-            <div className="rounded-xl border border-white/15 bg-white/5 p-4">
-              <div className="mb-4 rounded-xl border border-white/20 bg-black/40 p-3">
-                <p className="mt-1 text-sm text-white/70">
+            <div className="rounded-[28px] border border-[#ebe8fa] bg-[#F3F4FF] p-4 shadow-[0_12px_28px_rgba(108,81,233,0.08)]">
+              <div className="mb-4 rounded-[24px] border border-[#e6e1fb] bg-white p-4 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
+                <h2 className="text-[20px] font-semibold">为你推荐</h2>
+                <p className="mt-1 text-sm text-[#6d6889]">
                   基于当前状态自动识别：优先展示最可能任务
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-2">
@@ -623,17 +624,17 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                         key={candidate.task}
                         type="button"
                         onClick={() => handleSuggestionClick(mapped)}
-                        className="rounded-xl border border-white bg-white px-3 py-3 text-left text-black"
+                        className="rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 text-left text-[#3d3959] shadow-[0_8px_18px_rgba(61,57,89,0.12)]"
                       >
                         <p className="text-[20px] font-bold">{candidate.task}</p>
-                        <p className="mt-1 text-sm text-black/80">
+                        <p className="mt-1 text-sm text-[#3d3959]/80">
                           依据：{candidate.reasons[0]}
                         </p>
                       </button>
                     );
                   })}
                 </div>
-                <p className="mt-3 text-xs text-white/70">
+                <p className="mt-3 text-xs text-[#6d6889]">
                   困惑度：{personalized.confusionLevel}
                   {personalized.needSimpleMode
                     ? "（已切换简化引导模式）"
@@ -642,10 +643,10 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
               </div>
 
               <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-white" />
+                <Sparkles size={18} className="text-[#6A46FF]" />
                 <h2 className="text-[20px] font-semibold">猜你想问</h2>
               </div>
-              <p className="mt-1 text-sm text-white/70">
+              <p className="mt-1 text-sm text-[#6d6889]">
                 点击词条可直接获得答案
               </p>
 
@@ -660,7 +661,7 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                   return (
                     <div key={category}>
                       <div className="mb-2">
-                        <span className="inline-block rounded-md border border-white/20 bg-black/30 px-3 py-1 text-sm font-medium">
+                        <span className="inline-block rounded-full border border-[#ddd8f6] bg-white px-3 py-1 text-sm font-medium text-[#6A46FF] shadow-sm">
                           {category}
                         </span>
                       </div>
@@ -672,11 +673,11 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                             type="button"
                             onClick={() => handleSuggestionClick(entry)}
                             className={[
-                              "min-h-[64px] w-full rounded-xl border",
-                              "border-white/25 bg-white text-black",
-                              "px-3 py-3 text-left",
+                              "min-h-[64px] w-full rounded-[20px] border",
+                              "border-[#ece9fb] bg-white text-[#3d3959]",
+                              "px-3 py-3 text-left shadow-[0_8px_18px_rgba(61,57,89,0.12)]",
                               "text-[18px] font-semibold leading-snug",
-                              "hover:bg-white/90 active:bg-white/80",
+                              "hover:bg-[#faf9ff] active:bg-[#f4f3ff]",
                             ].join(" ")}
                           >
                             {entry.prompt}
@@ -691,10 +692,10 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
           </section>
 
           <section className="flex-1 lg:basis-2/3">
-            <div className="flex h-full flex-col rounded-xl border border-white/15 bg-white/5">
-              <div className="border-b border-white/10 px-4 py-3">
+            <div className="flex h-full flex-col rounded-[28px] border border-[#ebe8fa] bg-white shadow-[0_12px_28px_rgba(108,81,233,0.08)]">
+              <div className="border-b border-[#ebe8fa] bg-[#F3F4FF] px-5 py-4">
                 <h2 className="text-[20px] font-semibold">对话展示区</h2>
-                <p className="mt-1 text-sm text-white/70">
+                <p className="mt-1 text-sm text-[#6d6889]">
                   文字简洁易读，支持流程引导
                 </p>
               </div>
@@ -713,8 +714,8 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                         className={[
                           "max-w-[90%] whitespace-pre-wrap rounded-2xl px-4 py-3",
                           m.role === "user"
-                            ? "bg-white text-black"
-                            : "bg-black/40 text-white border border-white/10",
+                            ? "border border-[#ddd8f6] bg-[#F3F4FF] text-[#3d3959]"
+                            : "border border-[#ece9fb] bg-white text-[#3d3959] shadow-[0_8px_18px_rgba(61,57,89,0.12)]",
                         ].join(" ")}
                       >
                         <p className="text-[16px] leading-relaxed">{m.content}</p>
@@ -725,10 +726,10 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                 </div>
               </div>
 
-              <div className="border-t border-white/10 px-4 py-4">
+              <div className="border-t border-[#ebe8fa] bg-[#faf9ff] px-5 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col">
-                    <span className="text-sm text-white/70">语音交互区</span>
+                    <span className="text-sm text-[#6d6889]">语音交互区</span>
                     <span className="mt-1 text-[18px] font-semibold">
                       {isRecording ? "正在录音" : "点击说话"}
                     </span>
@@ -749,7 +750,7 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                             <div
                               key={i}
                               className={[
-                                "w-[6px] rounded-sm bg-white/80",
+                                "w-[6px] rounded-sm bg-[#6A46FF]/80",
                                 "transition-[height] duration-150",
                                 isRecording ? "opacity-100" : "opacity-30",
                               ].join(" ")}
@@ -767,7 +768,7 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                         "relative flex items-center justify-center overflow-hidden rounded-2xl border",
                         isRecording
                           ? "border-red-300 bg-red-500 text-white"
-                          : "border-white/25 bg-white text-black",
+                          : "border-[#6A46FF] bg-[#6A46FF] text-white shadow-[0_12px_28px_rgba(108,81,233,0.22)]",
                         "min-h-[72px] min-w-[160px] px-6 py-3",
                       ].join(" ")}
                     >
@@ -792,7 +793,7 @@ export default function SmartHospitalAssistant(props: SmartHospitalAssistantProp
                   </div>
                 </div>
 
-                <p className="mt-3 text-xs text-white/60">
+                <p className="mt-3 text-xs text-[#8e88b6]">
                   说明：本 MVP 目前用知识库模拟回复；未来可替换为真实语音识别与 AI 接口。
                 </p>
               </div>

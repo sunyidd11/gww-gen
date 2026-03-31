@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react';
 import {
   AlertCircle,
   Bot,
@@ -11,7 +12,7 @@ import {
   Search,
   Stethoscope,
 } from 'lucide-react';
-import { createTaskFromComponent } from '../../aiTaskFlow';
+import { createReopenableTaskFromMessageComponent, createTaskFromComponent, normalizeLocationData } from '../../aiTaskFlow';
 import type {
   AIComponentPayload,
   AIMessageComponentType,
@@ -41,11 +42,27 @@ function RecommendationIcon({ type }: { type: RecommendationData['type'] }) {
 export default function AIMessageRenderer({ component, onOpenTask, preview = false }: AIMessageRendererProps) {
   if (!component) return null;
 
+  const reopenableTask = createReopenableTaskFromMessageComponent(component);
+  const cardActionProps = reopenableTask && onOpenTask && !preview
+    ? {
+        role: 'button' as const,
+        tabIndex: 0,
+        onClick: () => onOpenTask(reopenableTask),
+        onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpenTask(reopenableTask);
+          }
+        },
+        className: 'cursor-pointer transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-hospital-blue/30',
+      }
+    : null;
+
   switch (component.type) {
     case 'medical': {
       const data = component.data as MedicalData;
       return (
-        <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 sm:p-4">
+        <div {...cardActionProps} className={`mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 sm:p-4 ${cardActionProps?.className ?? ''}`}>
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-hospital-blue sm:text-base">
             <Stethoscope size={16} /> 智能分诊建议
           </div>
@@ -64,7 +81,7 @@ export default function AIMessageRenderer({ component, onOpenTask, preview = fal
     case 'process': {
       const data = component.data as ProcessData;
       return (
-        <div className="mt-3 rounded-xl border border-orange-100 bg-orange-50 p-3 sm:p-4">
+        <div {...cardActionProps} className={`mt-3 rounded-xl border border-orange-100 bg-orange-50 p-3 sm:p-4 ${cardActionProps?.className ?? ''}`}>
           <div className="mb-3 flex items-center gap-2 text-sm font-bold text-orange-600 sm:text-base">
             <ClipboardCheck size={16} /> 流程指引
           </div>
@@ -86,18 +103,30 @@ export default function AIMessageRenderer({ component, onOpenTask, preview = fal
       );
     }
     case 'location': {
-      const data = component.data as LocationData;
+      const data = normalizeLocationData(component.data as LocationData);
       return (
-        <div className="mt-3 rounded-xl border border-green-100 bg-green-50 p-3 sm:p-4">
+        <div {...cardActionProps} className={`mt-3 rounded-xl border border-green-100 bg-green-50 p-3 sm:p-4 ${cardActionProps?.className ?? ''}`}>
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-green-700 sm:text-base">
             <MapPin size={16} /> 位置导航
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-base font-bold text-green-800 sm:text-lg">{data.destination}</div>
-              <div className="text-xs text-green-600 sm:text-sm">{data.floor} | {data.direction}</div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="text-base font-bold text-green-800 sm:text-lg">{data.title}</div>
+              <div className="space-y-1.5">
+                {data.fields.map((field) => (
+                  <div key={`${field.label}-${field.value}`} className="text-xs text-green-700 sm:text-sm">
+                    <span className="font-semibold">{field.label}：</span>
+                    <span>{field.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button className="self-start rounded-lg bg-green-600 p-2 text-white shadow-sm sm:self-auto" disabled={preview}>
+            <button
+              className="self-start rounded-lg bg-green-600 p-2 text-white shadow-sm sm:self-auto"
+              disabled={preview}
+              aria-label={data.actionLabel ?? '查看路线'}
+              title={data.actionLabel ?? '查看路线'}
+            >
               <Navigation size={18} />
             </button>
           </div>
@@ -113,7 +142,7 @@ export default function AIMessageRenderer({ component, onOpenTask, preview = fal
       };
       const colorClass = colors[data.level] || colors.info;
       return (
-        <div className={`mt-3 rounded-xl border p-3 sm:p-4 ${colorClass}`}>
+        <div {...cardActionProps} className={`mt-3 rounded-xl border p-3 sm:p-4 ${colorClass} ${cardActionProps?.className ?? ''}`}>
           <div className="mb-1 flex items-center gap-2 text-sm font-bold sm:text-base">
             <AlertCircle size={16} /> {data.title}
           </div>

@@ -5,6 +5,7 @@ import type {
   AITaskType,
   CompletedTaskRecord,
   JourneyContext,
+  LocationData,
   RecommendationData,
   ResumeTaskData,
   StandardTaskFlow,
@@ -75,6 +76,78 @@ const STANDARD_TASK_FLOWS: Record<StandardTaskFlow['taskType'], StandardTaskFlow
 
 export function getTaskTitle(type: AITaskType) {
   return TASK_TITLES[type] || '服务详情';
+}
+
+export function normalizeLocationData(data: LocationData | Record<string, unknown>) {
+  const source = (data && typeof data === 'object') ? data as Record<string, unknown> : {};
+  const title = typeof source.title === 'string' && source.title.trim().length > 0
+    ? source.title.trim()
+    : typeof source.destination === 'string' && source.destination.trim().length > 0
+      ? source.destination.trim()
+      : '位置导航';
+
+  const rawFields = Array.isArray(source.fields)
+    ? source.fields
+        .map((field) => {
+          if (!field || typeof field !== 'object') return null;
+          const item = field as Record<string, unknown>;
+          const label = typeof item.label === 'string' ? item.label.trim() : '';
+          const value = typeof item.value === 'string' ? item.value.trim() : '';
+          return label && value ? { label, value } : null;
+        })
+        .filter((field): field is { label: string; value: string } => Boolean(field))
+    : [];
+
+  const fields = rawFields.length > 0
+    ? rawFields
+    : [
+        typeof source.floor === 'string' && source.floor.trim().length > 0
+          ? { label: '楼层', value: source.floor.trim() }
+          : null,
+        typeof source.direction === 'string' && source.direction.trim().length > 0
+          ? { label: '路线', value: source.direction.trim() }
+          : null,
+      ].filter((field): field is { label: string; value: string } => Boolean(field));
+
+  const routePreview = source.routePreview && typeof source.routePreview === 'object'
+    ? (() => {
+        const routeSource = source.routePreview as Record<string, unknown>;
+        const title = typeof routeSource.title === 'string' ? routeSource.title.trim() || undefined : undefined;
+        const steps = Array.isArray(routeSource.steps)
+          ? (routeSource.steps as unknown[])
+              .filter((step): step is string => typeof step === 'string' && step.trim().length > 0)
+              .map((step) => step.trim())
+          : undefined;
+        const eta = typeof routeSource.eta === 'string' ? routeSource.eta.trim() || undefined : undefined;
+
+        return {
+          ...(title ? { title } : {}),
+          ...(steps && steps.length > 0 ? { steps } : {}),
+          ...(eta ? { eta } : {}),
+        };
+      })()
+    : undefined;
+
+  return {
+    title,
+    fields,
+    routePreview: routePreview && ((routePreview.steps && routePreview.steps.length > 0) || routePreview.title || routePreview.eta)
+      ? routePreview
+      : undefined,
+    actionLabel: typeof source.actionLabel === 'string' && source.actionLabel.trim().length > 0
+      ? source.actionLabel.trim()
+      : undefined,
+  };
+}
+
+export function getLocationTaskPresentation(data: LocationData | Record<string, unknown>) {
+  const location = normalizeLocationData(data);
+  return {
+    location,
+    showPresetMap: Boolean(location.routePreview),
+    mapPanelClassName: 'min-h-[320px] sm:min-h-[420px]',
+    infoPanelClassName: 'space-y-3 sm:space-y-4',
+  };
 }
 
 export function getStandardTaskFlow(taskType: StandardTaskFlow['taskType']) {
@@ -210,6 +283,12 @@ export function createTaskFromComponent(component: AIComponentPayload<AIInlineCo
     data: component.data,
     title: getTaskTitle(component.type as AITaskType),
   });
+}
+
+export function createReopenableTaskFromMessageComponent(component: AIComponentPayload<AIInlineComponentType> | AIComponentPayload<'recommendation' | 'resume_task'> | null | undefined) {
+  if (!component) return null;
+  if (component.type === 'recommendation' || component.type === 'resume_task') return null;
+  return createTaskFromComponent(component as AIComponentPayload<AIInlineComponentType>);
 }
 
 export function getInitialTaskStep(data: unknown) {
