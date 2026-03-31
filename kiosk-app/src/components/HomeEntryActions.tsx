@@ -194,13 +194,13 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           });
           router.push(`/register/recommend?${q.toString()}`);
         }}
-        className="block rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
+        className="block rounded-[28px] border border-[#ebe8fa] bg-white p-6 text-left shadow-[0_12px_28px_rgba(108,81,233,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(108,81,233,0.12)]"
       >
-        <div className="mb-3 inline-flex rounded-xl bg-gray-100 p-3 text-hospital-blue">
+        <div className="mb-4 inline-flex rounded-[20px] bg-[#F3F4FF] p-3 text-[#6A46FF] shadow-[0_8px_20px_rgba(108,81,233,0.14)]">
           <CreditCard size={34} />
         </div>
-        <p className="text-[24px] font-bold text-gray-900">插入医保卡</p>
-        <p className="mt-2 text-[18px] text-gray-500">将卡片平稳插入读卡区</p>
+        <p className="text-[24px] font-bold text-[#2f2a45]">{tt("插入医保卡", "Insert Card")}</p>
+        <p className="mt-2 text-[18px] text-[#6d6889]">{tt("将卡片平稳插入读卡区", "Insert card into reader")}</p>
       </button>
 
       <button
@@ -210,13 +210,13 @@ export default function HomeEntryActions(props: HomeEntryActionsProps) {
           const nextStage = current.nextStage;
           router.push(buildStageHref(nextStage, current));
         }}
-        className="block rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
+        className="block rounded-[28px] border border-[#ebe8fa] bg-white p-6 text-left shadow-[0_12px_28px_rgba(108,81,233,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(108,81,233,0.12)]"
       >
-        <div className="mb-3 inline-flex rounded-xl bg-gray-100 p-3 text-hospital-blue">
+        <div className="mb-4 inline-flex rounded-[20px] bg-[#F3F4FF] p-3 text-[#6A46FF] shadow-[0_8px_20px_rgba(108,81,233,0.14)]">
           <QrCode size={34} />
         </div>
-        <p className="text-[24px] font-bold text-gray-900">扫描医保码</p>
-        <p className="mt-2 text-[18px] text-gray-500">将二维码对准扫码区域</p>
+        <p className="text-[24px] font-bold text-[#2f2a45]">{tt("扫描医保码", "Scan Insurance QR")}</p>
+        <p className="mt-2 text-[18px] text-[#6d6889]">{tt("将二维码对准扫码区域", "Align QR with scanner")}</p>
       </button>
     </div>
   );

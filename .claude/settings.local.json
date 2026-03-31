@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx next:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm test:*)",
+      "Bash(printf '\\\\n---STAGED---\\\\n')",
+      "Bash(git switch:*)",
+      "Bash(bash ~/.claude/skills/git-pushing/scripts/smart_commit.sh)",
+      "Bash(git rebase:*)",
+      "Bash(GIT_EDITOR=true git rebase --continue)",
+      "Bash(git add:*)",
+      "Bash(GIT_EDITOR=\":\" git rebase --continue)",
+      "Bash(GIT_EDITOR=: git rebase --continue)"
+    ]
+  }
+}

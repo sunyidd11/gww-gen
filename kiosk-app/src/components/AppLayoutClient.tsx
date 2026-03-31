@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Mic, Loader2, Bot } from "lucide-react";
@@ -431,7 +432,15 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-gray-900 overflow-hidden">
       <div className="relative flex flex-col h-full w-full max-w-[calc(100vh*9/16)] bg-hospital-bg shadow-2xl overflow-hidden border-x border-gray-200">
-        
+        {pathname !== "/component-library" ? (
+          <Link
+            href="/component-library"
+            className="fixed bottom-4 right-4 z-50 rounded-full border border-white/20 bg-black/70 px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-sm transition hover:bg-black/80"
+          >
+            组件库
+          </Link>
+        ) : null}
+
         {/* Top 1/5: AI Chat */}
         <div className="flex h-[20%] flex-col overflow-y-auto border-b border-gray-200 p-4 bg-white/50">
           <div className="flex-1 overflow-y-auto flex flex-col justify-end gap-3 pb-2">
