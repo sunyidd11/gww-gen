@@ -2,13 +2,14 @@ import type { AIComponentPayload, AIMessageComponentType, AITask, TaskCompletion
 
 export const messageCardSamples: Array<{ title: string; component: AIComponentPayload<AIMessageComponentType> }> = [
   {
-    title: '分诊建议',
+    title: '预约挂号单',
     component: {
       type: 'medical',
       data: {
-        symptoms: ['咳嗽', '低烧', '胸闷'],
-        recommendation: '呼吸内科',
-        confidence: 0.92,
+        department: '呼吸内科',
+        doctorName: '王主任',
+        time: '今日 14:00',
+        statusText: '挂号成功',
       },
     },
   },

@@ -14,7 +14,7 @@ export type ScenarioId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type AppView = 'business' | 'library' | 'profile';
 export type TipLevel = 'info' | 'warning' | 'emergency';
 export type RecommendationType = 'checkin' | 'payment' | 'examination' | 'report' | 'meds';
-export type AIMessageComponentType = 'medical' | 'process' | 'location' | 'tip' | 'recommendation' | 'resume_task';
+export type AIMessageComponentType = 'medical' | 'process' | 'location' | 'tip' | 'recommendation';
 export type AITaskType = 'appointment' | 'checkin' | 'payment' | 'examination' | 'report' | 'meds' | 'medical' | 'process' | 'location' | 'tip';
 export type AIInlineComponentType = Exclude<AITaskType, 'appointment' | 'payment' | 'checkin' | 'report' | 'meds' | 'examination'> | 'appointment' | 'payment' | 'checkin' | 'report' | 'meds' | 'examination';
 
@@ -28,8 +28,12 @@ export interface Scenario {
 
 export interface MedicalData {
   symptoms?: string[];
-  recommendation: string;
-  confidence: number;
+  recommendation?: string;
+  confidence?: number;
+  department?: string;
+  doctorName?: string;
+  time?: string;
+  statusText?: string;
 }
 
 export interface ProcessData {
@@ -37,10 +41,25 @@ export interface ProcessData {
   currentStep?: number;
 }
 
+export interface LocationField {
+  label: string;
+  value: string;
+}
+
+export interface LocationRoutePreview {
+  title?: string;
+  steps?: string[];
+  eta?: string;
+}
+
 export interface LocationData {
-  destination: string;
-  floor: string;
-  direction: string;
+  title?: string;
+  fields?: LocationField[];
+  routePreview?: LocationRoutePreview;
+  actionLabel?: string;
+  destination?: string;
+  floor?: string;
+  direction?: string;
 }
 
 export interface TipData {
@@ -53,12 +72,6 @@ export interface RecommendationData {
   type: RecommendationType;
   title: string;
   target: string;
-}
-
-export interface ResumeTaskData {
-  title: string;
-  target: string;
-  task: AITask;
 }
 
 export interface TaskCompletionFollowUp {
@@ -158,7 +171,6 @@ export type AIComponentData =
   | LocationData
   | TipData
   | RecommendationData
-  | ResumeTaskData
   | AppointmentData
   | PaymentData
   | ExaminationData
