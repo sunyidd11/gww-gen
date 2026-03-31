@@ -42,13 +42,13 @@ import AIComponentLibraryPage from './pages/AIComponentLibraryPage';
 import UserProfilePage from './pages/UserProfilePage';
 import {
   buildAiContextSummary,
-  buildResumeTaskComponent,
   buildTaskCompletionSummary,
   buildTaskStepTask,
   buildUserProfileSummary,
   createJourneyContext,
   getInitialTaskStep,
   getStandardTaskFlow,
+  mapKioskStageOneCompletion,
   normalizeTaskForFlow,
   recordRecommendation,
   recordTaskClose,
@@ -90,6 +90,7 @@ type KioskStagePayload = {
   department?: string;
   selectedDoctor?: string;
   room?: string;
+  appointmentTime?: string;
   callingNumber?: string;
   aheadCount?: number;
   waitMinutes?: number;
@@ -100,7 +101,7 @@ type KioskStagePayload = {
 /**
  * 一体机状态码映射为手机端可读文案与推荐任务。
  */
-function mapKioskCompletionToMessage(payload: KioskStagePayload): {
+export function mapKioskCompletionToMessage(payload: KioskStagePayload): {
   completedTitle: string;
   messageText: string;
   recommendation: RecommendationData | null;
@@ -110,32 +111,18 @@ function mapKioskCompletionToMessage(payload: KioskStagePayload): {
   const department = payload.department || '对应科室';
   const doctor = payload.selectedDoctor || '值班医生';
   const room = payload.room || '2号诊室';
+  const appointmentTime = payload.appointmentTime || '请按预约时间到院';
   const callingNumber = payload.callingNumber || 'A042';
   const aheadCount = typeof payload.aheadCount === 'number' ? Math.max(0, payload.aheadCount) : 5;
   const waitMinutes = typeof payload.waitMinutes === 'number' ? Math.max(0, payload.waitMinutes) : Math.max(5, aheadCount * 2);
   const stage = payload.statusCode;
   if (stage === 1) {
-    return {
-      completedTitle: '推荐医生挂号缴费',
-      messageText: `“推荐医生挂号缴费”已完成。已同步医生「${doctor}」、就诊诊室「${room}」，并自动展示签到建议与导航。`,
-      recommendation: {
-        type: 'checkin',
-        title: '开启下一步：签到候诊排队',
-        target: `${department}签到台（${room}）`,
-      },
-      inlineComponent: {
-        type: 'location',
-        data: {
-          title: `${department}签到台`,
-          fields: [
-            { label: '诊室', value: room },
-            { label: '医生', value: doctor },
-            { label: '当前任务', value: '先签到，再到候诊区等待叫号' },
-          ],
-          actionLabel: '查看签到路线',
-        },
-      },
-    };
+    return mapKioskStageOneCompletion({
+      department,
+      selectedDoctor: doctor,
+      room,
+      appointmentTime,
+    });
   }
   if (stage === 2) {
     return {
@@ -164,7 +151,7 @@ function mapKioskCompletionToMessage(payload: KioskStagePayload): {
   if (stage === 3) {
     return {
       completedTitle: '检查项目确认并缴费',
-      messageText: '“检查项目确认并缴费”已完成。请查看下方推荐，并手动开启下一步任务。',
+      messageText: '',
       recommendation: {
         type: 'report',
         title: '开启下一步：检查结果打印并复诊',
@@ -175,7 +162,7 @@ function mapKioskCompletionToMessage(payload: KioskStagePayload): {
   if (stage === 4) {
     return {
       completedTitle: '检查结果打印并复诊',
-      messageText: '“检查结果打印并复诊”已完成。请查看下方推荐，并手动开启下一步任务。',
+      messageText: '',
       recommendation: {
         type: 'meds',
         title: '开启下一步：确认药品清单并药品缴费',
@@ -515,20 +502,9 @@ export default function App() {
       return;
     }
 
-    const nextContext = recordTaskClose(journeyContext);
-    const resumeComponent = buildResumeTaskComponent(nextContext);
-
-    setJourneyContext(nextContext);
+    setJourneyContext(recordTaskClose(journeyContext));
     setActiveTask(null);
     setTaskStep(0);
-
-    if (resumeComponent) {
-      setMessages((prev: Message[]) => [...prev, {
-        role: 'model',
-        text: `您已中断当前任务，可随时继续${activeTask.title}。`,
-        component: resumeComponent,
-      }]);
-    }
   };
 
   const handleTaskStepChange = (value: number | ((prev: number) => number)) => {
@@ -652,7 +628,7 @@ export default function App() {
           }
 
           组件数据结构：
-          - medical: { "symptoms": ["症状1"], "recommendation": "科室名", "confidence": 0.9 }
+          - medical: { "department": "科室名", "doctorName": "医生名", "time": "时间", "statusText": "挂号成功" }；若为普通分诊场景，可兼容旧字段 recommendation/confidence/symptoms
           - appointment: { "department": "科室名", "doctors": [{"name": "医生名", "time": "时间", "fee": "金额"}] }
           - checkin: { "callingNumber": "A042", "aheadCount": 5, "waitMinutes": 15, "department": "呼吸内科门诊" }（均为可选，缺省用占位）
           - payment: { "lineItems": [{"name": "项目名称", "price": 45.0}], "total": 197.5, "statusLabel": "待支付" }（lineItems/total/statusLabel 可选）
@@ -779,7 +755,7 @@ export default function App() {
 
     setMessages((prev: Message[]) => [...prev, {
       role: 'model',
-      text: `${completedTaskTitle}已完成。请查看下方推荐，并手动开启下一步任务。`
+      text: ''
     }]);
 
     void sendMessage(`我已完成${completedTaskTitle}，请只推荐我当前最适合开始的下一个任务，不要自动开始任务。`, {
@@ -896,7 +872,7 @@ export default function App() {
                                 ? 'rounded-tr-none bg-hospital-blue text-white'
                                 : 'rounded-tl-none border border-gray-100 bg-white text-gray-800'
                             }`}>
-                              <div className="whitespace-pre-wrap">{msg.text}</div>
+                              {msg.text ? <div className="whitespace-pre-wrap">{msg.text}</div> : null}
                               {msg.role === 'model' && (
                                 <AIMessageRenderer
                                   component={msg.component ?? null}

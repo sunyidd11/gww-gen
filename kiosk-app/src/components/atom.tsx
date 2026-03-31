@@ -156,17 +156,17 @@ export const PaymentSummaryCard: React.FC<{
         {status === "paid" ? tr(lang, "已支付", "Paid") : tr(lang, "待支付", "Unpaid")}
       </span>
     </div>
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 px-4 sm:px-5">
       {items.map((item, idx) => (
-        <div key={`${item.name}-${idx}`} className="flex items-center justify-between gap-3 py-3.5 text-sm sm:py-4 sm:text-base">
-          <span className="text-[#8f8a96]">{item.name}</span>
-          <span className="shrink-0 font-semibold text-[#2f2a45]">¥{item.price.toFixed(2)}</span>
+        <div key={`${item.name}-${idx}`} className="flex items-start justify-between gap-3 py-3.5 text-sm sm:py-4 sm:text-base">
+          <span className="min-w-0 flex-1 break-words text-[#8f8a96]">{item.name}</span>
+          <span className="shrink-0 pl-2 font-semibold text-[#2f2a45]">¥{item.price.toFixed(2)}</span>
         </div>
       ))}
     </div>
-    <div className="mt-4 flex items-center justify-between border-t border-[#d7d3de] pt-4">
-      <span className="text-base font-bold text-[#2f2a45] sm:text-lg">{tr(lang, "合计", "Total")}</span>
-      <span className="text-xl font-bold text-[#6A46FF] sm:text-2xl">¥{total.toFixed(2)}</span>
+    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#d7d3de] px-4 pt-4 pb-5 sm:px-5">
+      <span className="min-w-0 flex-1 text-base font-bold text-[#2f2a45] sm:text-lg">{tr(lang, "合计", "Total")}</span>
+      <span className="shrink-0 text-right text-xl font-bold text-[#6A46FF] sm:text-2xl">¥{total.toFixed(2)}</span>
     </div>
   </div>
 );
@@ -287,9 +287,9 @@ export const ExamGroupCard: React.FC<{
   <div className="w-full space-y-0 overflow-hidden rounded-[28px] bg-white shadow-[0_12px_28px_rgba(108,81,233,0.08)]">
     <div className="flex items-center gap-2.5 rounded-none bg-[#F3F4FF] px-4 py-4 sm:px-5 sm:py-4.5">
       <FileText className="h-5 w-5 shrink-0 text-[#4b465f]" strokeWidth={1.75} />
-      <span className="text-base font-bold text-[#3d3959] sm:text-lg">{title}</span>
+      <span className="min-w-0 flex-1 break-words text-base font-bold text-[#3d3959] sm:text-lg">{title}</span>
     </div>
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 px-4 sm:px-5">
       {exams.map((exam, idx) => {
         const done = exam.status === "completed";
         return (
@@ -299,10 +299,10 @@ export const ExamGroupCard: React.FC<{
             className="flex w-full items-start justify-between gap-3 py-4 text-left transition hover:bg-[#faf9ff] sm:py-4"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-sm text-[#8f8a96] sm:text-base">{exam.name}</div>
+              <div className="break-words text-sm text-[#8f8a96] sm:text-base">{exam.name}</div>
             </div>
-            <span className={`flex shrink-0 items-center gap-1 text-sm sm:text-base ${done ? "text-[#8f8a96]" : "font-medium text-[#6A46FF]"}`}>
-              {done ? tr(lang, "已完成", "Completed") : tr(lang, "待检查", "Pending")}
+            <span className={`flex shrink-0 items-center gap-1 pl-2 text-sm sm:text-base ${done ? "text-[#8f8a96]" : "font-medium text-[#6A46FF]"}`}>
+              <span className="whitespace-nowrap">{done ? tr(lang, "已完成", "Completed") : tr(lang, "待检查", "Pending")}</span>
               <ChevronRight className="h-4 w-4 opacity-70" strokeWidth={2} />
             </span>
           </button>

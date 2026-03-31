@@ -453,59 +453,70 @@ export default function AITaskRenderer({
           );
         })()}
 
-        {activeTask.type === 'medical' && (
-          <div className="w-full space-y-6 sm:space-y-8">
-            <div className="text-center">
-              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-hospital-blue sm:h-20 sm:w-20">
-                <Stethoscope size={32} />
+        {activeTask.type === 'medical' && (() => {
+          const data = activeTask.data as MedicalData;
+          const department = data.department ?? data.recommendation ?? '对应科室';
+          const doctorName = data.doctorName ?? '值班医生';
+          const time = data.time ?? '请按挂号时间到院';
+          const statusText = data.statusText ?? '挂号成功';
+          return (
+            <div className="w-full space-y-6 sm:space-y-8">
+              <div className="text-center">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-hospital-blue sm:h-20 sm:w-20">
+                  <Stethoscope size={32} />
+                </div>
+                <h3 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">预约挂号单</h3>
+                <p className="text-sm text-gray-500 sm:text-base">已同步一体机挂号结果，请按预约时间到院</p>
               </div>
-              <h3 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">分诊建议</h3>
-              <p className="text-sm text-gray-500 sm:text-base">根据您的描述，为您匹配到以下科室</p>
-            </div>
 
-            <div className="rounded-3xl border border-blue-100 bg-blue-50 p-6 text-center sm:p-8">
-              <div className="mb-3 text-3xl font-black text-hospital-blue sm:mb-4 sm:text-5xl">{(activeTask.data as MedicalData).recommendation}</div>
-              <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-600 sm:text-base">
-                <CheckCircle2 size={18} />
-                智能匹配度 {Math.round(((activeTask.data as MedicalData).confidence || 0) * 100)}%
+              <div className="rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:p-8">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-600 sm:text-base">
+                  <CheckCircle2 size={18} />
+                  {statusText}
+                </div>
+                <div className="mt-5 space-y-4 rounded-2xl bg-white p-4 text-sm text-gray-700 shadow-sm sm:p-5 sm:text-base">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="shrink-0 text-gray-500">科室</span>
+                    <span className="min-w-0 text-right font-bold text-gray-900 break-words">{department}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="shrink-0 text-gray-500">医生</span>
+                    <span className="min-w-0 text-right font-bold text-gray-900 break-words">{doctorName}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="shrink-0 text-gray-500">时间</span>
+                    <span className="min-w-0 text-right font-bold text-gray-900 break-words">{time}</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div className="font-bold text-gray-700">识别到的症状：</div>
-              <div className="flex flex-wrap gap-2">
-                {(activeTask.data as MedicalData).symptoms?.map((s, i) => (
-                  <span key={i} className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm sm:px-4 sm:py-2">
-                    {s}
-                  </span>
-                ))}
-              </div>
+              {!preview && setCurrentId && setMedicalRequirement && (
+                <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:gap-4 sm:pt-6">
+                  <button
+                    onClick={() => {
+                      recordSelection?.({
+                        componentType: 'medical',
+                        action: 'confirm_registration_notice',
+                        department,
+                        doctorName,
+                        time,
+                        statusText,
+                      });
+                      setMedicalRequirement(department);
+                      completeTask?.(activeTask.type, activeTask.title);
+                    }}
+                    className="flex-1 rounded-2xl bg-hospital-blue py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 sm:text-lg"
+                  >
+                    {flowActionLabel ?? '知道了'}
+                  </button>
+                  <button onClick={safeClose} className="rounded-2xl border-2 border-gray-200 px-6 py-4 text-base font-bold text-gray-600 transition-all hover:bg-gray-50 sm:text-lg">
+                    返回咨询
+                  </button>
+                </div>
+              )}
             </div>
-
-            {!preview && setCurrentId && setMedicalRequirement && (
-              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:gap-4 sm:pt-6">
-                <button
-                  onClick={() => {
-                    recordSelection?.({
-                      componentType: 'medical',
-                      action: 'choose_recommendation',
-                      recommendation: (activeTask.data as MedicalData).recommendation,
-                      symptoms: (activeTask.data as MedicalData).symptoms ?? [],
-                    });
-                    setMedicalRequirement((activeTask.data as MedicalData).recommendation);
-                    completeTask?.(activeTask.type, activeTask.title);
-                  }}
-                  className="flex-1 rounded-2xl bg-hospital-blue py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 sm:text-lg"
-                >
-                  {flowActionLabel ?? '立即挂号'}
-                </button>
-                <button onClick={safeClose} className="rounded-2xl border-2 border-gray-200 px-6 py-4 text-base font-bold text-gray-600 transition-all hover:bg-gray-50 sm:text-lg">
-                  返回咨询
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          );
+        })()}
 
         {activeTask.type === 'process' && (
           <div className="w-full space-y-8 sm:space-y-10">
