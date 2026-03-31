@@ -101,29 +101,29 @@ function renderStepAtoms(slug: TaskSlug, stepIndex: number, journey: MockJourney
               : tt("当前未发现异常项目", "No abnormal items currently")
           }
         />
-        <div className="space-y-2 rounded-xl border border-black/20 bg-white p-3">
+        <div className="space-y-2 rounded-[24px] border border-[#e6e1fb] bg-[#F3F4FF] p-4 shadow-[0_10px_24px_rgba(108,81,233,0.08)]">
           {(abnormalRows.length ? abnormalRows : []).map((row, idx) => (
             <div
               key={`${row.name}-${idx}`}
-              className="flex items-center justify-between rounded-lg border border-black/15 bg-white px-3 py-3"
+              className="flex items-center justify-between rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(61,57,89,0.12)]"
             >
               <div>
-                <p className="text-sm text-black/70">{tt("异常项目", "Abnormal Item")} {idx + 1}</p>
-                <p className="text-[18px] font-semibold text-black">{row.name}</p>
+                <p className="text-sm text-[#8e88b6]">{tt("异常项目", "Abnormal Item")} {idx + 1}</p>
+                <p className="text-[18px] font-semibold text-[#2f2a45]">{row.name}</p>
               </div>
               <button
                 type="button"
-                className="rounded-lg border border-red-200 bg-red-500/15 px-4 py-2 text-[16px] font-semibold text-red-700"
+                className="rounded-full border border-[#d9d2ff] bg-[#F3F4FF] px-4 py-2 text-[16px] font-semibold text-[#6A46FF] shadow-sm"
               >
                 {tt("查看异常", "View Abnormal")}
               </button>
             </div>
           ))}
           {!abnormalRows.length ? (
-            <p className="text-sm text-black/70">{tt("暂无异常项目。", "No abnormal items.")}</p>
+            <p className="text-sm text-[#6d6889]">{tt("暂无异常项目。", "No abnormal items.")}</p>
           ) : null}
         </div>
-        <p className="text-xs text-white/70">
+        <p className="text-xs text-[#9a96bf]">
           {tt("报告编号：", "Report ID: ")}{journey.report.id} | {tt("出具时间：", "Issued At: ")}{journey.report.date}
         </p>
       </div>
@@ -138,14 +138,14 @@ function renderStepAtoms(slug: TaskSlug, stepIndex: number, journey: MockJourney
           status="pending"
           description={`${tt("本次复诊共", "Follow-up includes")} ${journey.medicinePlan.items.length} ${tt("项药品，请确认后进入缴费", "medicine items. Confirm then pay.")}`}
         />
-        <div className="space-y-2 rounded-xl border border-black/20 bg-white p-3">
+        <div className="space-y-2 rounded-[24px] border border-[#e6e1fb] bg-[#F3F4FF] p-4 shadow-[0_10px_24px_rgba(108,81,233,0.08)]">
           {journey.medicinePlan.items.map((item, idx) => (
-            <div key={`${item.name}-${idx}`} className="flex items-center justify-between rounded-lg border border-black/10 px-3 py-3">
+            <div key={`${item.name}-${idx}`} className="flex items-center justify-between rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
               <div>
-                <p className="text-[17px] font-semibold text-black">{idx + 1}. {item.name}</p>
-                <p className="text-sm text-black/70">{item.spec} | {tt("数量", "Qty")} {item.qty}</p>
+                <p className="text-[17px] font-semibold text-[#2f2a45]">{idx + 1}. {item.name}</p>
+                <p className="text-sm text-[#6d6889]">{item.spec} | {tt("数量", "Qty")} {item.qty}</p>
               </div>
-              <p className="text-[17px] font-bold text-black">¥{(item.price * item.qty).toFixed(2)}</p>
+              <p className="text-[17px] font-bold text-[#6A46FF]">¥{(item.price * item.qty).toFixed(2)}</p>
             </div>
           ))}
         </div>
@@ -192,7 +192,9 @@ function renderStepAtoms(slug: TaskSlug, stepIndex: number, journey: MockJourney
           status="pending"
           description={`${tt("已为您智能规划", "Smart plan prepared for")} ${examCount} ${tt("个检查项目顺序，请确认后缴费", "exam items. Confirm then pay.")}`}
         />
-        <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{journey.examPlan.planningReason}</p>
+        <p className="rounded-[22px] border border-[#d9d2ff] bg-[#F3F4FF] px-4 py-3 text-sm text-[#6A46FF] shadow-[0_8px_18px_rgba(108,81,233,0.12)]">
+          {journey.examPlan.planningReason}
+        </p>
         {examCount <= 2 ? (
           <ExamGroupCard
             title={tt("本次检查项目", "Exam Items")}
@@ -473,20 +475,36 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
     (isQueueWaitingFlow && stepIndex === 0);
 
   return (
-    <div className="rounded-xl border border-white/20 bg-black/40 p-4">
-      <div className="flex gap-1.5">
-        {stepItems.map((_, idx) => (
-          <div
-            key={`${props.config.slug}-${idx}`}
-            className={`h-1.5 flex-1 rounded-full ${idx <= stepIndex ? "bg-white" : "bg-white/20"}`}
-          />
-        ))}
+    <div className="overflow-hidden rounded-[32px] border border-[#e9e8f6] bg-white shadow-[0_18px_48px_rgba(114,97,255,0.08)]">
+      <div className="bg-[#f4f3ff] px-6 py-6 sm:px-10 sm:py-8">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#9a96bf]">
+              {tt("当前流程", "Current Flow")}
+            </p>
+            <h2 className="mt-3 text-[28px] font-black tracking-tight text-[#3c3a4a] sm:text-[42px]">
+              {stepTitle}
+            </h2>
+          </div>
+          <div className="rounded-[28px] bg-[#c9bbff] px-5 py-3 text-[18px] font-bold text-[#5d35f0] shadow-sm sm:px-7 sm:py-4 sm:text-[22px]">
+            {isLast ? tt("最后一步", "Final Step") : `${stepIndex + 1}/${total}`}
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-2">
+          {stepItems.map((_, idx) => (
+            <div
+              key={`${props.config.slug}-${idx}`}
+              className={`h-2 flex-1 rounded-full ${idx <= stepIndex ? "bg-[#6b45f6]" : "bg-[#ddd9f7]"}`}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="mt-4 rounded-xl bg-white p-4">
+      <div className="bg-white px-6 py-8 sm:px-10 sm:py-10">
         <div>{renderStepAtoms(props.config.slug, stepIndex, props.journey, props.lang)}</div>
 
-        <div className="mt-4">
+        <div className="mt-8">
           <ActionButtons
             primaryLabel={primaryLabel}
             secondaryLabel={secondaryLabel}
@@ -593,10 +611,10 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
             }}
           />
           {!isPaymentFlow && !isReportFlow && isLast ? (
-            <div className="mt-3 text-right">
+            <div className="mt-5 text-right">
               {done ? (
-                <div className="space-y-2 text-left">
-                  <p className="text-sm text-green-700">
+                <div className="space-y-3 rounded-[24px] border border-[#e7e4fb] bg-[#f7f5ff] p-4 text-left">
+                  <p className="text-base font-medium text-[#5c5893]">
                     {tt("任务已完成，系统将在", "Task completed. Auto redirect in")} {autoCountDown} {tt("秒后自动跳转", "seconds")}
                     {nextTask ? ` ${tt("到下一任务", "to next task")} (${nextTask})` : ` ${tt("回首页", "to home")}`}。
                   </p>
@@ -614,18 +632,18 @@ export default function TaskFlowPanel(props: TaskFlowPanelProps) {
                           )}`
                         )
                       }
-                      className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white"
+                      className="rounded-full bg-[#6b45f6] px-5 py-3 text-sm font-bold text-white shadow-sm"
                     >
                       {tt("立即跳转下一任务", "Go to Next Task")}
                     </button>
                   ) : (
-                    <Link href="/" className="text-sm font-semibold text-blue-700 underline underline-offset-4">
+                    <Link href="/" className="text-sm font-semibold text-[#6b45f6] underline underline-offset-4">
                       {tt("无后续任务，返回首页", "No next task, back to home")}
                     </Link>
                   )}
                 </div>
               ) : (
-                <Link href="/" className="text-sm font-semibold text-blue-300 underline underline-offset-4">
+                <Link href="/" className="text-sm font-semibold text-[#8c83d6] underline underline-offset-4">
                   {tt("完成后返回任务首页", "Return to home after finish")}
                 </Link>
               )}

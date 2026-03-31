@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AppLang, tr } from "../lib/i18n-shared";
+import type { AppLang } from "../lib/i18n-shared";
 
 type PickerDoctor = {
   name: string;
@@ -10,6 +10,7 @@ type PickerDoctor = {
   specialty: string;
   nextSlot: string;
   consultationFee: number;
+  isFollowupDoctor?: boolean;
 };
 
 type AuthoritativeDoctorPickerProps = {
@@ -28,6 +29,10 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
   const router = useRouter();
   const [selectedName, setSelectedName] = useState(props.doctors[0]?.name ?? "");
 
+  useEffect(() => {
+    setSelectedName(props.doctors[0]?.name ?? "");
+  }, [props.doctors]);
+
   const selectedDoctor = useMemo(
     () => props.doctors.find((d) => d.name === selectedName) ?? props.doctors[0],
     [props.doctors, selectedName]
@@ -39,7 +44,7 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
   };
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="mt-3 space-y-4">
       {props.doctors.map((doctor, idx) => {
         const active = doctor.name === selectedName;
         return (
@@ -47,28 +52,36 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
             key={`${doctor.name}-${idx}`}
             type="button"
             onClick={() => setSelectedName(doctor.name)}
+            data-doctor-name={doctor.name}
             className={[
-              "w-full rounded-lg px-3 py-3 text-left transition",
+              "w-full rounded-[28px] px-4 py-4 text-left transition shadow-[0_12px_28px_rgba(108,81,233,0.08)]",
               active
-                ? "border-2 border-blue-400 bg-blue-50"
-                : "border border-gray-200 bg-white hover:border-gray-300 shadow-sm",
+                ? "border border-[#d9d2ff] bg-[#F3F4FF]"
+                : "border border-[#ebe8fa] bg-white hover:border-[#d9d2ff] hover:bg-[#faf9ff]",
             ].join(" ")}
           >
-            <p className="text-[20px] font-bold text-gray-900">
-              {doctor.name} {doctor.title}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[20px] font-bold text-[#2f2a45]">
+                {doctor.name} {doctor.title}
+              </p>
+              {doctor.isFollowupDoctor ? (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                  复诊
+                </span>
+              ) : null}
+            </div>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                <p className="text-xs text-gray-500">擅长方向</p>
-                <p className="text-[15px] font-semibold text-gray-900">{doctor.specialty}</p>
+              <div className="rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
+                <p className="text-xs text-[#8e88b6]">擅长方向</p>
+                <p className="text-[15px] font-semibold text-[#3d3959]">{doctor.specialty}</p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                <p className="text-xs text-gray-500">最早号源</p>
-                <p className="text-[15px] font-semibold text-gray-900">{doctor.nextSlot}</p>
+              <div className="rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
+                <p className="text-xs text-[#8e88b6]">最早号源</p>
+                <p className="text-[15px] font-semibold text-[#6A46FF]">{doctor.nextSlot}</p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                <p className="text-xs text-gray-500">挂号费</p>
-                <p className="text-[15px] font-semibold text-gray-900">¥{doctor.consultationFee}</p>
+              <div className="rounded-[20px] border border-[#ece9fb] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(61,57,89,0.12)]">
+                <p className="text-xs text-[#8e88b6]">挂号费</p>
+                <p className="text-[15px] font-semibold text-[#3d3959]">¥{doctor.consultationFee}</p>
               </div>
             </div>
           </button>
@@ -79,14 +92,15 @@ export default function AuthoritativeDoctorPicker(props: AuthoritativeDoctorPick
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm"
+          className="col-span-1 inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#ddd8f6] bg-[#F3F4FF] px-5 py-2.5 text-center text-[15px] font-semibold text-[#6d6889] shadow-sm"
         >
           返回首页
         </button>
         <button
           type="button"
           onClick={confirm}
-          className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-center text-[20px] font-bold text-white shadow-lg"
+          data-primary-action="confirm-register"
+          className="col-span-2 inline-flex min-h-[56px] items-center justify-center rounded-full bg-[#6A46FF] px-8 py-4 text-center text-[20px] font-bold text-white shadow-[0_12px_28px_rgba(108,81,233,0.22)]"
         >
           确认挂号
         </button>
